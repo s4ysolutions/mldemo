@@ -22,3 +22,6 @@ dependencyResolutionManagement {
 rootProject.name = "MLDemo"
 include(":app")
 include(":app:ui:interaction")
+include(":guesser")
+include(":pytorch")
+include(":audio")
