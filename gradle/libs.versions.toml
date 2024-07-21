@@ -1,6 +1,6 @@
 [versions]
 activityCompose = "1.9.0"
-agp = "8.5.0"
+agp = "8.5.1"
 appcompat = "1.7.0"
 composeBom = "2024.06.00"
 coreKtx = "1.13.1"
@@ -18,6 +18,11 @@ pytorch_android_lite = "2.1.0"
 sdkCompile = "34"
 sdkMin = "21"
 sdkTarget = "34"
+tensorflowLite = "2.16.1"
+tensorflowLiteGpu = "2.16.1"
+tensorflowLiteGpuApi = "2.16.1"
+tensorflowLiteGpuDelegatePlugin = "0.4.4"
+tensorflowLiteSupport = "0.4.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +45,11 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 pytorch_android_lite = { module = "org.pytorch:pytorch_android_lite", version.ref = "pytorch_android_lite" }
+tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflowLite" }
+tensorflow-lite-gpu = { module = "org.tensorflow:tensorflow-lite-gpu", version.ref = "tensorflowLiteGpu" }
+tensorflow-lite-gpu-api = { module = "org.tensorflow:tensorflow-lite-gpu-api", version.ref = "tensorflowLiteGpuApi" }
+tensorflow-lite-gpu-delegate-plugin = { module = "org.tensorflow:tensorflow-lite-gpu-delegate-plugin", version.ref = "tensorflowLiteGpuDelegatePlugin" }
+tensorflow-lite-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflowLiteSupport" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

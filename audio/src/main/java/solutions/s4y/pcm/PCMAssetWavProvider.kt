@@ -8,7 +8,7 @@ import java.nio.ByteOrder
 
 class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
 
-    override val shorts: ShortArray by lazy {
+    override val floats: FloatArray by lazy {
         val fd: AssetFileDescriptor = context.getAssets().openFd(asset)
         val extractor = MediaExtractor()
         extractor.setDataSource(fd)
@@ -33,19 +33,19 @@ class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
         }
 
         // summary capacities of all sampleBuffers
-        var shortsSize = 0
+        var floatsSize = 0
         for (sampleBuffer in sampleBuffers) {
-            shortsSize += sampleBuffer.capacity() / 2
+            floatsSize += sampleBuffer.capacity() / 2
         }
-        val shorts = ShortArray(shortsSize)
+        val floats = FloatArray(floatsSize)
         var shortN = 0
         for (i in sampleBuffers.indices) {
             val sampleBuffer = sampleBuffers[i]
-            val shortBuffer = sampleBuffer.asShortBuffer()
+            val shortBuffer = sampleBuffer.asFloatBuffer()
             val shortBufferSize = shortBuffer.capacity()
-            shortBuffer[shorts, shortN, shortBufferSize]
+            shortBuffer[floats, shortN, shortBufferSize]
             shortN += shortBufferSize
         }
-        shorts
+        floats
     }
 }

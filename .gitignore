@@ -29,3 +29,4 @@ waytoday/src/main/java/s4y/waytoday/wsse/Secret.java
 *.keystore
 /app/src/google-services.json
 /pytorch/src/main/assets/wav2vec2.ptl
+.venv

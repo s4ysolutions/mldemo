@@ -4,11 +4,10 @@ plugins {
 }
 
 android {
-    namespace = "solutions.s4y.pcm"
+    namespace = "solutions.s4y.whisper"
     compileSdk = 34
 
     defaultConfig {
-        //  android.media.MediaExtractor.sampleSize
         minSdk = 28
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -34,10 +33,15 @@ android {
 }
 
 dependencies {
+    implementation(project(":audio"))
+    implementation(libs.pytorch.android.lite)
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.google.material)
+    implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.gpu.delegate.plugin)
+    //implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0")
+    implementation(libs.tensorflow.lite.gpu)
+    implementation(libs.tensorflow.lite.gpu.api)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

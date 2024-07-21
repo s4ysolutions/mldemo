@@ -1,0 +1,4 @@
+/build
+tf_whisper_saved
+*.ptl
+*.tflite
