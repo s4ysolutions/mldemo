@@ -120,7 +120,7 @@ forced_decoder_ids = processor.get_decoder_prompt_ids(language="ar", task="trans
 if not skip_convert:
     # convert huggingface Tensorflow model to Tensorflow lite
 
-    # Loriginal whisper model itself has `forward` method which recognize just one tocken form 
+    # Original whisper model itself has `forward` method which recognize just one tocken form 
     # audio data stream. Huggingface adds a wrapper around it with the method `generate`
     # to recognize the 30sec audio data
     model = TFWhisperForConditionalGeneration.from_pretrained(model_name)
@@ -172,7 +172,7 @@ input_features = inputs.input_features
 # our purpose is to check the Lite model
 interpreter = tf.lite.Interpreter(tflite_model_path)
 # This magic call give us the `serving` method of the wrapper class
-# Unless the had the only method we would had to use more complex approach
+# If we did not had the only method we would have had to use more complex approach
 # to find the needed serving. Google for get_signature_runner if interested
 tflite_generate = interpreter.get_signature_runner()
 # a workhorse: calls the serving which in turn will call `generate` method 
