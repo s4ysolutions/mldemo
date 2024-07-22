@@ -192,6 +192,6 @@ print(transcription)
 # For the latter task it is good idea to preload the `vocab` from hugging face
 # and either to pass it down to the application or may be better
 # add the decoding to the `serving` method of the wrapper and make it to return
-# the readable string (see 
-# [create_wav2vec2.py](https://github.com/s4ysolutions/mldemo/blob/main/voice-recognition/create_wav2vec2.py) 
-# for this appoach)
+# the readable string. For the getting the idea see 
+# [create_wav2vec2.py](https://github.com/s4ysolutions/mldemo/blob/main/voice-recognition/create_wav2vec2.py)
+# It has the similar wrapper class around the original PyTorch model facebook/wav2vec2
