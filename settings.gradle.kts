@@ -21,7 +21,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "MLDemo"
 include(":app")
-include(":app:ui:interaction")
-include(":guesser")
-include(":voice-recognition")
+// include(":app:ui:interaction")
+// include(":guesser")
+include(":voice-transcription")
 include(":audio")
+include(":voice-detection")
+include(":guesser")

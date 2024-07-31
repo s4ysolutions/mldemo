@@ -5,11 +5,10 @@ plugins {
 
 android {
     namespace = "solutions.s4y.pcm"
-    compileSdk = 34
+    compileSdk = libs.versions.sdkCompile.get().toInt()
 
     defaultConfig {
-        //  android.media.MediaExtractor.sampleSize
-        minSdk = 28
+        minSdk = libs.versions.sdkMin.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -25,11 +24,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = libs.versions.jvmTarget.get()
     }
 }
 
@@ -38,6 +37,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

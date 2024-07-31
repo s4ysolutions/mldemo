@@ -3,13 +3,16 @@ package solutions.s4y.pcm
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.media.MediaExtractor
+import android.os.Build
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
 
     override val floats: FloatArray by lazy {
-        val fd: AssetFileDescriptor = context.getAssets().openFd(asset)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+            throw UnsupportedOperationException("Requires API 28")
+        val fd: AssetFileDescriptor = context.assets.openFd(asset)
         val extractor = MediaExtractor()
         extractor.setDataSource(fd)
         extractor.selectTrack(0)

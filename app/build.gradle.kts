@@ -11,6 +11,10 @@ android {
         compose = true
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
+    }
+
     signingConfigs {
         create("release") {
             storeFile = file("mldemo.river0.up.keystore")
@@ -35,12 +39,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     defaultConfig {
@@ -68,7 +68,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":app:ui:interaction"))
+    // implementation(project(":app:ui:interaction"))
+    implementation(project(":guesser"))
+    implementation(project(":voice-detection"))
+    implementation(project(":voice-transcription"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
@@ -77,6 +80,9 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.core)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.navigation.compose)
 
     testImplementation(libs.junit)
 
