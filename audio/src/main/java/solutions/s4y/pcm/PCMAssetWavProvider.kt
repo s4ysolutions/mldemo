@@ -7,7 +7,49 @@ import android.os.Build
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+// TODO: deduplicate code
 class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
+
+    override val shorts: ShortArray by lazy {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+            throw UnsupportedOperationException("Requires API 28")
+        val fd: AssetFileDescriptor = context.assets.openFd(asset)
+        val extractor = MediaExtractor()
+        extractor.setDataSource(fd)
+        extractor.selectTrack(0)
+
+        val sampleBuffers: MutableList<ByteBuffer> = ArrayList()
+        var samplesCount = 0
+        // requires API 28
+        val samplesSize = extractor.sampleSize.toInt()
+        while (true) {
+            val sampleBuffer = ByteBuffer.allocate(samplesSize)
+            sampleBuffer.order(ByteOrder.LITTLE_ENDIAN)
+            val n = extractor.readSampleData(sampleBuffer, 0)
+            if (n < samplesSize) {
+                val sampleBufferLast = ByteBuffer.allocate(n)
+                sampleBufferLast.put(sampleBuffer.array(), 0, n)
+                sampleBuffers.add(sampleBufferLast)
+                break
+            } else {
+                sampleBuffers.add(sampleBuffer)
+            }
+            samplesCount += n / 2
+            extractor.advance()
+        }
+
+        // summary capacities of all sampleBuffers
+        val shorts = ShortArray(samplesCount)
+        var shortN = 0
+        for (i in sampleBuffers.indices) {
+            val sampleBuffer = sampleBuffers[i]
+            val shortBuffer = sampleBuffer.asShortBuffer()
+            val shortBufferSize = shortBuffer.capacity()
+            shortBuffer[shorts, shortN, shortBufferSize]
+            shortN += shortBufferSize
+        }
+        shorts
+    }
 
     override val floats: FloatArray by lazy {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
@@ -18,13 +60,14 @@ class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
         extractor.selectTrack(0)
 
         val sampleBuffers: MutableList<ByteBuffer> = ArrayList()
+        var samplesCount = 0
         // requires API 28
-        val sampleSize = extractor.sampleSize.toInt()
+        val samplesSize = extractor.sampleSize.toInt()
         while (true) {
-            val sampleBuffer = ByteBuffer.allocate(sampleSize)
+            val sampleBuffer = ByteBuffer.allocate(samplesSize)
             sampleBuffer.order(ByteOrder.LITTLE_ENDIAN)
             val n = extractor.readSampleData(sampleBuffer, 0)
-            if (n < sampleSize) {
+            if (n < samplesSize) {
                 val sampleBufferLast = ByteBuffer.allocate(n)
                 sampleBufferLast.put(sampleBuffer.array(), 0, n)
                 sampleBuffers.add(sampleBufferLast)
@@ -36,11 +79,7 @@ class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
         }
 
         // summary capacities of all sampleBuffers
-        var floatsSize = 0
-        for (sampleBuffer in sampleBuffers) {
-            floatsSize += sampleBuffer.capacity() / 2
-        }
-        val floats = FloatArray(floatsSize)
+        val floats = FloatArray(samplesCount)
         var shortN = 0
         for (i in sampleBuffers.indices) {
             val sampleBuffer = sampleBuffers[i]
