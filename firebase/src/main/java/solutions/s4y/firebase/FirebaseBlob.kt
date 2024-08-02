@@ -15,13 +15,20 @@ class FirebaseBlob(private val blobPath: String, private val localFile: File) {
         }
     }
 
+    private var _isLocal: Boolean? = null
+
+    val isLocal: Boolean? get() = _isLocal
+
     fun get(): Flow<File> = callbackFlow {
-        if (localFile.exists())
-            trySend(localFile)
-        else
+        if (localFile.exists()) {
+            _isLocal = true
+            trySendBlocking(localFile)
+            close()
+        } else
             root.child(blobPath)
                 .getFile(localFile)
                 .addOnSuccessListener {
+                    _isLocal = false
                     // trySend ?
                     trySendBlocking(localFile)
                     close()

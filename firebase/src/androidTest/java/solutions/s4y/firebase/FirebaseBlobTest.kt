@@ -19,7 +19,7 @@ class FirebaseBlobTest {
     val firebaseTestRule = FirebaseRule()
 
     @Test
-    fun get_shouldDownload_whenWhisper101NormalizerJson(): Unit = runBlocking{
+    fun get_shouldDownload_whenNotExist(): Unit = runBlocking{
         // Arrange
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         val localFile = File(appContext.filesDir, "whisper101_normalizer.json")
@@ -34,5 +34,28 @@ class FirebaseBlobTest {
         // Assert
         assertTrue(localFile.exists())
         assertEquals(52666, localFile.length())
+    }
+
+
+    @Test
+    fun get_shouldReturn_whenExist(): Unit = runBlocking{
+        // Arrange
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        val localFile = File(appContext.filesDir, "whisper101_normalizer.json")
+        val blob = FirebaseBlob("ml/whisper-1.0.1/normalizer.json", localFile)
+
+        if (localFile.exists()) {
+            localFile.delete()
+        }
+        assertFalse(localFile.exists())
+        // Act && Assert
+        assertNull(blob.isLocal)
+        blob.get().collect()
+        assertTrue(localFile.exists())
+        assertTrue(blob.isLocal == false)
+        blob.get().collect()
+        // Assert
+        assertTrue(blob.isLocal == true)
+        assertTrue(localFile.exists())
     }
 }
