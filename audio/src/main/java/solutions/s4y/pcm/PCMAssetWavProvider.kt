@@ -18,39 +18,45 @@ class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
         extractor.setDataSource(fd)
         extractor.selectTrack(0)
 
-        val sampleBuffers: MutableList<ByteBuffer> = ArrayList()
-        var samplesCount = 0
+        val shortsArrays: MutableList<ShortArray> = ArrayList()
+        var shortsCount = 0
         // requires API 28
-        val samplesSize = extractor.sampleSize.toInt()
+        val bytesSize = extractor.sampleSize.toInt()
+        val bytesBuffer = ByteBuffer.allocate(bytesSize)
+        bytesBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        //val  bytesBuffer = ByteArray(bytesSize)
         while (true) {
-            val sampleBuffer = ByteBuffer.allocate(samplesSize)
-            sampleBuffer.order(ByteOrder.LITTLE_ENDIAN)
-            val n = extractor.readSampleData(sampleBuffer, 0)
-            if (n < samplesSize) {
-                val sampleBufferLast = ByteBuffer.allocate(n)
-                sampleBufferLast.put(sampleBuffer.array(), 0, n)
-                sampleBuffers.add(sampleBufferLast)
+            val n = extractor.readSampleData(bytesBuffer, 0)
+            if (n == 0)
                 break
-            } else {
-                sampleBuffers.add(sampleBuffer)
+
+            val sn = n/2
+            val shortsArray = ShortArray(sn)
+            bytesBuffer.asShortBuffer()[shortsArray, 0, sn]
+            shortsArrays.add(shortsArray)
+
+            shortsCount += sn
+
+            if (n<bytesSize) {
+                break
             }
-            samplesCount += n / 2
+
             extractor.advance()
         }
 
-        // summary capacities of all sampleBuffers
-        val shorts = ShortArray(samplesCount)
-        var shortN = 0
-        for (i in sampleBuffers.indices) {
-            val sampleBuffer = sampleBuffers[i]
-            val shortBuffer = sampleBuffer.asShortBuffer()
-            val shortBufferSize = shortBuffer.capacity()
-            shortBuffer[shorts, shortN, shortBufferSize]
-            shortN += shortBufferSize
+
+        val result = ShortArray(shortsCount)
+
+        var currentIndex = 0
+        for (array in shortsArrays) {
+            array.copyInto(result, currentIndex)
+            currentIndex += array.size
         }
-        shorts
+
+        result
     }
 
+    // TODO: rewrite, it is not suspected to work
     override val floats: FloatArray by lazy {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
             throw UnsupportedOperationException("Requires API 28")
