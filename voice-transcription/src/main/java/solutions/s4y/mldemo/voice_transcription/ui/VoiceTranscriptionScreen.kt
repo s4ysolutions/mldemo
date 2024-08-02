@@ -1,4 +1,4 @@
-package solutions.s4y.mldemo.voice_transcription
+package solutions.s4y.mldemo.voice_transcription.ui
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
