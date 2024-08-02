@@ -7,23 +7,27 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import kotlinx.coroutines.flow.map
 import solutions.s4y.mldemo.voice_detection.viewmodels.VoiceDetectionViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun VoiceDetectionScreen() {
+    val context = LocalContext.current
     val viewModel: VoiceDetectionViewModel = remember { VoiceDetectionViewModel() }
     val audio = viewModel.audioService
-    val classifier = viewModel.voiceClassificationService
+    val classifier = viewModel.voiceClassificationService(context)
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
     val samplesCount = audio.samplesCountFlow.collectAsState(initial = audio.samplesCount)
 
-    val classes = classifier.classifierFlow.collectAsState(initial = listOf("No classes yet"))
+    val classes = classifier.labelsFlow.map { it.labels }
+        .collectAsState(initial = listOf("No classes yet"))
 
     if (permissionState.status.isGranted) {
         Column {

@@ -1,6 +1,7 @@
 package solutions.s4y.mldemo.voice_detection.ui
 
 import android.Manifest
+import android.annotation.SuppressLint
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PlayDisabled
@@ -20,6 +21,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import solutions.s4y.audio.AudioService
 import solutions.s4y.mldemo.voice_detection.viewmodels.VoiceDetectionViewModel
 
+@SuppressLint("MissingPermission")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun VoiceDetectionBottomBar(viewModel: VoiceDetectionViewModel = VoiceDetectionViewModel()) {
@@ -27,7 +29,7 @@ fun VoiceDetectionBottomBar(viewModel: VoiceDetectionViewModel = VoiceDetectionV
     val scope = rememberCoroutineScope()
 
     val au = viewModel.audioService
-    val classifier = viewModel.voiceClassificationService
+    val classifier = viewModel.voiceClassificationService(context)
     val auStatus = au.recordingStatusFlow.collectAsState(initial = au.currentStatus)
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
@@ -43,7 +45,7 @@ fun VoiceDetectionBottomBar(viewModel: VoiceDetectionViewModel = VoiceDetectionV
                             classifier.stop()
                         } else {
                             au.startRecording()
-                            classifier.start(context, scope)
+                            classifier.start(scope)
                         }
                     } else {
                         permissionState.launchPermissionRequest()
