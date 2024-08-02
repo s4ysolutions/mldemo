@@ -1,12 +1,10 @@
 package solutions.s4y.firebase
 
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 
 import org.junit.Test
-import org.junit.runner.RunWith
 
 import org.junit.Assert.*
 import org.junit.Rule
@@ -16,7 +14,7 @@ import java.io.File
 class FirebaseBlobTest {
 
     @get:Rule
-    val firebaseTestRule = FirebaseRule()
+    val firebaseRule = FirebaseRule()
 
     @Test
     fun get_shouldDownload_whenNotExist(): Unit = runBlocking{
