@@ -1,10 +1,11 @@
 package solutions.s4y.pcm
 
 import kotlinx.coroutines.flow.Flow
+import java.io.Closeable
 
-interface IPCMFeed {
+interface IPCMFeed: Closeable {
     var batch: Int
-    val waveForms: Flow<FloatArray>
-    fun addSamples(shortArray: ShortArray)
+    val flow: Flow<FloatArray>
+    fun addSamples(shortsArray: ShortArray)
     fun reset()
 }

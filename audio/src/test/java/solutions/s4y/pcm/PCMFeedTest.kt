@@ -4,6 +4,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -16,14 +17,17 @@ class PCMFeedTest {
         val cb: (FloatArray) -> Unit = mock()
         val pcmFeed: IPCMFeed = PCMFeed()
         pcmFeed.batch = 10
-        val job = pcmFeed.waveForms
+        val job = pcmFeed.flow
             .onEach(cb)
             .launchIn(this)
         // Act
+        delay(10)
         pcmFeed.addSamples(shortArrayOf(6, 7, 8, 9, -10))
         pcmFeed.addSamples(shortArrayOf(3, 4, 5))
         pcmFeed.addSamples(shortArrayOf(2, 1, 11))
+        pcmFeed.close()
         // Assert
+        // give time to emit
         delay(10)
         // timeout(1000) blocks the coroutine until the timeout is reached
         // it is not suspended
@@ -41,6 +45,6 @@ class PCMFeedTest {
                 0.1f
             )
         )
-        job.cancel()
+        assertTrue(job.isCompleted)
     }
 }

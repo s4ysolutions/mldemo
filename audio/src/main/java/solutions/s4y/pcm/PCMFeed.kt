@@ -1,10 +1,14 @@
 package solutions.s4y.pcm
 
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.shareIn
 
-class PCMFeed : IPCMFeed {
+class PCMFeed() : IPCMFeed {
     companion object {
         fun absMax(arr: ShortArray): Int {
             var max = 0
@@ -23,13 +27,17 @@ class PCMFeed : IPCMFeed {
             return max
         }
     }
+
+    private var onAddPCM: (FloatArray) -> Unit = {}
+    private var onClosePCM: () -> Unit = {}
+
+    override fun close() {
+        onClosePCM()
+    }
+
     private val SAMPLE_RATE = 16000
 
     private var _batch = SAMPLE_RATE
-    private val _waveForms = MutableSharedFlow<FloatArray>(
-        replay = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
     private val samplesArrays = mutableListOf<ShortArray>()
     private var samplesCount = 0
 
@@ -42,15 +50,24 @@ class PCMFeed : IPCMFeed {
             reset()
         }
 
-    override fun addSamples(shortArray: ShortArray): Unit = synchronized(sync) {
-        samplesCount += shortArray.size
+    private fun addSamplesNotSync(shortsArray: ShortArray): Unit {
+        samplesCount += shortsArray.size
         val above = samplesCount - _batch
         if (above >= 0) {
-            val samplesLast = if (above > 0)
-                shortArray.copyOfRange(0, shortArray.size - above)
-            else
-                shortArray
-            val maxL = absMax(samplesLast)
+            // array is to fulfill the batch
+            // and rest is the left for the next batch
+            val array: ShortArray
+            val rest: ShortArray?
+            val samplesLast = if (above > 0) {
+                array = shortsArray.copyOfRange(0, shortsArray.size - above)
+                rest = shortsArray.copyOfRange(shortsArray.size - above, shortsArray.size)
+            } else {
+                array = shortsArray
+                rest = null
+            }
+            // TODO: optimization hint
+            // probably it is simpler to use Short.MaxValue
+            val maxL = absMax(array)
             var max = 0
             var total = 0
             for (arr in samplesArrays) {
@@ -61,7 +78,8 @@ class PCMFeed : IPCMFeed {
                 total += arr.size
             }
             max = if (maxL > max) maxL else max
-            val floatArray = FloatArray(total + samplesLast.size)
+            // normalize to -1.0..1.0
+            val floatArray = FloatArray(total + array.size)
             if (max == 0) {
                 floatArray.fill(0.0f)
             } else {
@@ -71,21 +89,37 @@ class PCMFeed : IPCMFeed {
                         floatArray[i++] = s.toFloat() / max
                     }
                 }
-                for (s in samplesLast) {
+                for (s in array) {
                     floatArray[i++] = s.toFloat() / max
                 }
             }
-            _waveForms.tryEmit(floatArray)
-            reset()
+            // notify the flow
+            onAddPCM(floatArray)
+            resetNotSync()
+            if (rest != null) {
+                addSamplesNotSync(rest)
+            }
         } else {
-            samplesArrays.add(shortArray)
+            samplesArrays.add(shortsArray)
         }
     }
 
-    override fun reset() = synchronized(sync) {
+    private fun resetNotSync() {
         samplesArrays.clear()
         samplesCount = 0
     }
 
-    override val waveForms: SharedFlow<FloatArray> = _waveForms
+    override fun addSamples(shortsArray: ShortArray): Unit = synchronized(sync) {
+        addSamplesNotSync(shortsArray)
+    }
+
+    override fun reset() = synchronized(sync) {
+        resetNotSync()
+    }
+
+    override val flow: Flow<FloatArray> = callbackFlow {
+        onAddPCM = { trySend(it) }
+        onClosePCM = { close() }
+        awaitClose()
+    }// .shareIn(scope, started = SharingStarted.Eagerly)
 }
