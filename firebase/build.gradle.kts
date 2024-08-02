@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("solutions.s4y.google-services") version "1.0.1-alpha02"
+    alias(libs.plugins.s4y.google.services)
 }
 
 java {

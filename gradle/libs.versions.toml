@@ -26,8 +26,9 @@ navigationCompose = "2.7.7"
 pytorch_android_lite = "2.1.0"
 sdkCompile = "34"
 comment26 = "23 required for TensorFlow Lite"
-sdkMin = "23"
+sdkMin = "24"
 sdkTarget = "34"
+s4yGoogleServices = "1.0.1-alpha02"
 tensorflowLite = "2.16.1"
 tensorflowLiteGpu = "2.16.1"
 tensorflowLiteGpuApi = "2.16.1"
@@ -79,4 +80,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+s4y-google-services = { id = "solutions.s4y.google-services", version.ref = "s4yGoogleServices" }
 
