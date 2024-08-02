@@ -1,11 +1,11 @@
-package solutions.s4y.voice_recognition.pytorch.model.wav2vec2
-
+package solutions.s4y.mldemo.voice_transcription.obsolete.pytorch.model.wav2vec2
+/*
 import org.pytorch.IValue
 import org.pytorch.Module
 import org.pytorch.Tensor
 import solutions.s4y.voice_recognition.IVoiceRecognizer
-import solutions.s4y.voice_recognition.pytorch.tensors.ITensorProvider
-import solutions.s4y.voice_recognition.pytorch.tensors.PCMTensorProvider
+import solutions.s4y.mldemo.voice_transcription.obsolete.pytorch.tensors.ITensorProvider
+import solutions.s4y.mldemo.voice_transcription.obsolete.pytorch.tensors.PCMTensorProvider
 
 class Wav2vec2VoiceRecognizer(private val module: Module):IVoiceRecognizer {
     private fun recognize(value: IValue): String =
@@ -19,3 +19,4 @@ class Wav2vec2VoiceRecognizer(private val module: Module):IVoiceRecognizer {
 
     override fun recognize(pcm: FloatArray): String = recognize(PCMTensorProvider(pcm))
 }
+ */

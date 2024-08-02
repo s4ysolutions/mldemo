@@ -1,7 +1,8 @@
 package solutions.s4y.voice_recognition.model.pytorch.facebook.wav2vec2
-
+/*
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.experimental.runners.Enclosed
 import org.junit.runner.RunWith
@@ -9,7 +10,7 @@ import org.junit.runners.Parameterized
 import org.pytorch.LitePyTorchAndroid
 import solutions.s4y.pcm.PCM16000Resampler
 import solutions.s4y.pcm.PCMAssetWavProvider
-import solutions.s4y.voice_recognition.pytorch.model.wav2vec2.Wav2vec2VoiceRecognizer
+import solutions.s4y.mldemo.voice_transcription.obsolete.pytorch.model.wav2vec2.Wav2vec2VoiceRecognizer
 
 @RunWith(Enclosed::class)
 class Wav2Vec2Test {
@@ -41,6 +42,7 @@ class Wav2Vec2Test {
             )
         }
 
+        @Ignore("not supported")
         @Test
         fun shouldRecognize() {
             // Arrange
@@ -54,3 +56,4 @@ class Wav2Vec2Test {
         }
     }
 }
+ */
