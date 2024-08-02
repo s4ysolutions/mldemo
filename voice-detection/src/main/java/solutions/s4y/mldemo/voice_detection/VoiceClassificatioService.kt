@@ -17,7 +17,7 @@ class VoiceClassificationService(context: Context, private val audioService: Aud
 
     fun start(scope: CoroutineScope) {
         stop()
-        audioService.samplesFlow
+        job = audioService.samplesFlow
             .onEach { samples ->
                 classificator.addSamples(samples)
             }.launchIn(scope)
@@ -25,6 +25,7 @@ class VoiceClassificationService(context: Context, private val audioService: Aud
 
     fun stop() {
         job?.cancel()
+        job = null
     }
 
     val labelsFlow: Flow<IVoiceClassificator.Labels> = classificator.labelsFlow

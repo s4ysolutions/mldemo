@@ -39,6 +39,11 @@ class YamnetClassifier(
     private val labels: List<String>
     private val decoder: IDecoder
     private val pcmFeed: IPCMFeed = PCMFeed()
+    private val outputBuffer0: TensorBuffer
+    private var inputTensor: TensorAudio? = null
+    private var inputBuffer: TensorBuffer? = null
+    private var inputBuf: ByteBuffer? = null
+    private var prevWaveFormSize: Int = 0
 
     init {
         val assetFileDescriptor = context.assets.openFd(MODEL_PATH)
@@ -52,36 +57,44 @@ class YamnetClassifier(
         // it works well to recognize speach
         decoder = DecoderLast(labels)
         // for noises like rain, wind, etc
-        // decoder = DecoderAverage(labels, 5)
+        // decoder = DecoderAverage(labels, 3)
 
         pcmFeed.batch = 15600 // https://www.kaggle.com/models/google/yamnet/tfLite
         interpreter = Interpreter(modelFile)
         val dim = interpreter.getOutputTensor(0).shape()[1]
         // TODO: handle error
         assert(labels.size == dim)
-    }
-
-    private fun waveForms2Probabilities(waveForms: FloatArray): FloatArray {
-        val inputTensor = TensorAudio.create(format, waveForms.size)
-        inputTensor.load(waveForms)
-        val inputBuffer = inputTensor.tensorBuffer
-        val inputSize =
-            waveForms.size * java.lang.Float.BYTES
-        val inputBuf = ByteBuffer.allocateDirect(inputSize)
-        inputBuf.order(ByteOrder.nativeOrder())
-        for (input in waveForms) {
-            inputBuf.putFloat(input)
-        }
-        inputBuffer.loadBuffer(inputBuf)
 
         val outputTensor0 = interpreter.getOutputTensor(0)
-        val outputBuffer0 =
+        outputBuffer0 =
             TensorBuffer.createFixedSize(
                 outputTensor0.shape(),
                 outputTensor0.dataType()
             )
+    }
 
-        interpreter.run(inputBuffer.buffer, outputBuffer0.buffer)
+    private fun waveForms2Probabilities(waveForms: FloatArray): FloatArray {
+        var _inputTensor = inputTensor
+        var _inputBuffer = inputBuffer
+        var _inputBuf = inputBuf
+        if (_inputTensor == null  || _inputBuffer == null || _inputBuf == null || prevWaveFormSize != waveForms.size) {
+            _inputTensor = TensorAudio.create(format, waveForms.size)
+            _inputBuffer = _inputTensor.tensorBuffer
+            val inputSize = waveForms.size * java.lang.Float.BYTES
+            _inputBuf = ByteBuffer.allocateDirect(inputSize)
+            _inputBuf.order(ByteOrder.nativeOrder())
+            inputTensor = _inputTensor
+            inputBuffer = _inputBuffer
+            inputBuf = _inputBuf
+            prevWaveFormSize = waveForms.size
+        }
+        _inputTensor!!.load(waveForms)
+        for (input in waveForms) {
+            _inputBuf!!.putFloat(input)
+        }
+        _inputBuffer!!.loadBuffer(_inputBuf!!)
+
+        interpreter.run(_inputBuffer.buffer, outputBuffer0.buffer)
         val probabilities = outputBuffer0.floatArray
         return probabilities
     }
