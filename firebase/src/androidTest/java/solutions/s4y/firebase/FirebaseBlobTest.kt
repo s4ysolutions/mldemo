@@ -28,7 +28,7 @@ class FirebaseBlobTest {
         }
         assertFalse(localFile.exists())
         // Act
-        blob.get().collect()
+        blob.flow.collect()
         // Assert
         assertTrue(localFile.exists())
         assertEquals(52666, localFile.length())
@@ -48,10 +48,10 @@ class FirebaseBlobTest {
         assertFalse(localFile.exists())
         // Act && Assert
         assertNull(blob.isLocal)
-        blob.get().collect()
+        blob.flow.collect()
         assertTrue(localFile.exists())
         assertTrue(blob.isLocal == false)
-        blob.get().collect()
+        blob.flow.collect()
         // Assert
         assertTrue(blob.isLocal == true)
         assertTrue(localFile.exists())

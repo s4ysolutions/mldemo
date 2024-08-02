@@ -7,6 +7,9 @@ import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import java.io.File
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class FirebaseBlob(private val blobPath: String, private val localFile: File) {
     companion object {
@@ -19,7 +22,7 @@ class FirebaseBlob(private val blobPath: String, private val localFile: File) {
 
     val isLocal: Boolean? get() = _isLocal
 
-    fun get(): Flow<File> = callbackFlow {
+    val flow: Flow<File> = callbackFlow {
         if (localFile.exists()) {
             _isLocal = true
             trySendBlocking(localFile)
@@ -37,5 +40,21 @@ class FirebaseBlob(private val blobPath: String, private val localFile: File) {
                     close(ex)
                 }
         awaitClose()
+    }
+
+    suspend fun get(): File = suspendCoroutine { cont ->
+        if (localFile.exists()) {
+            _isLocal = true
+            cont.resume(localFile)
+        } else
+            root.child(blobPath)
+                .getFile(localFile)
+                .addOnSuccessListener {
+                    _isLocal = false
+                    cont.resume(localFile)
+                }
+                .addOnFailureListener { ex ->
+                    cont.resumeWithException(ex)
+                }
     }
 }
