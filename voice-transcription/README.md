@@ -28,3 +28,7 @@ This will create the PyTorch mobile interpreter model file `wav2vec2.ptl`. Copy 
 mkdir -p pytorch/src/main/assets
 cp wav2vec2.ptl pytorch/src/main/assets
 ```
+### 2. Whisper Model
+
+Whisper is prepared by the following repository: https://github.com/s4ysolutions/whishper2tflite/tree/main
+and downloaded from Google Storage Bucket.
