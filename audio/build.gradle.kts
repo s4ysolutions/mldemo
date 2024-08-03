@@ -23,13 +23,20 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
-    kotlinOptions {
-        jvmTarget = libs.versions.jvmTarget.get()
-    }
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 dependencies {
@@ -37,10 +44,12 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
+
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
 
-    testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

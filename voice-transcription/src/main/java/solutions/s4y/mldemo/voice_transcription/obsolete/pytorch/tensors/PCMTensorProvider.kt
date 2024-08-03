@@ -1,7 +1,7 @@
 package solutions.s4y.mldemo.voice_transcription.obsolete.pytorch.tensors
 
 import org.pytorch.Tensor
-import solutions.s4y.pcm.IPCMProvider
+import solutions.s4y.audio.pcm.IPCMProvider
 
 class PCMTensorProvider(shortsArray: FloatArray): ITensorProvider {
     constructor(pcmProvider: IPCMProvider): this((pcmProvider.floats))

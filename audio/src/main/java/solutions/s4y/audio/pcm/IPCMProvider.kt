@@ -1,4 +1,4 @@
-package solutions.s4y.pcm
+package solutions.s4y.audio.pcm
 
 interface IPCMProvider {
     val floats: FloatArray

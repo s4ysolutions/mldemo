@@ -6,5 +6,5 @@ interface IMelVoiceTranscriber {
      * @param waveForms Array of -1..1 values > 1 sec
      * @return List of transcribed texts
      */
-    fun transcribe(melSpectrogram: FloatArray): List<String>
+    fun getTokens(melSpectrogram: FloatArray): List<Int>
 }

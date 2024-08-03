@@ -6,8 +6,7 @@ import kotlinx.coroutines.flow.map
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.audio.TensorAudio
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import solutions.s4y.pcm.IPCMFeed
-import solutions.s4y.pcm.PCMFeed
+import solutions.s4y.audio.accumulator.PCMFeed
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -38,7 +37,7 @@ class YamnetClassifier(
     private val interpreter: Interpreter
     private val labels: List<String>
     private val decoder: IDecoder
-    private val pcmFeed: IPCMFeed = PCMFeed()
+    private val pcmFeed: PCMFeed = PCMFeed()
     private val outputBuffer0: TensorBuffer
     private var inputTensor: TensorAudio? = null
     private var inputBuffer: TensorBuffer? = null
@@ -100,7 +99,7 @@ class YamnetClassifier(
     }
 
     override fun addSamples(samples: ShortArray) {
-        pcmFeed.addSamples(samples)
+        pcmFeed.add(samples)
     }
 
     override val probabilitiesFlow =  pcmFeed.flow

@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 
 class FlowTest {
@@ -43,12 +43,14 @@ class FlowTest {
     }
     @Test
     fun customFlow_canBeClosedFromCallback(): Unit = runBlocking {
+        // Arrange
         val cbManager = CbManager()
         val f = callbackFlow<Int> {
             cbManager.setCb { trySend(it) }
             cbManager.setClose { close() }
             awaitClose()
         }
+        // Act
         val l = mutableListOf<Int>()
         val job = launch {
             f.toList(l)
@@ -62,6 +64,9 @@ class FlowTest {
         cbManager.send(3)
         delay(1)
         cbManager.close()
+        job.join()
+
+        // Assert
 
         assertEquals(listOf(1, 2, 3), l)
     }

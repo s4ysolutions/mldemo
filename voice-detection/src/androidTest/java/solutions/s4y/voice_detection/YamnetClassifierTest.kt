@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 import solutions.s4y.mldemo.voice_detection.yamnet.IVoiceClassificator
 
 import solutions.s4y.mldemo.voice_detection.yamnet.YamnetClassifier
-import solutions.s4y.pcm.PCMAssetWavProvider
+import solutions.s4y.audio.pcm.PCMAssetWavProvider
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -29,9 +29,8 @@ class YamnetClassifierTest {
         val classifier = YamnetClassifier(appContext)
         val pcmProvider = PCMAssetWavProvider(appContext, "adam/1-1.wav")
         val pcm = pcmProvider.shorts
-        val results = mutableListOf<IVoiceClassificator.Labels>()
         // Act
-
+        val results = mutableListOf<IVoiceClassificator.Labels>()
         val job = launch {
             classifier.labelsFlow.toList(results)
         }
