@@ -1,4 +1,4 @@
-package solutions.s4y.mel
+package solutions.s4y.audio.mel
 
 import android.util.Log
 import java.util.Arrays

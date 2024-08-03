@@ -1,4 +1,4 @@
-package solutions.s4y.pcm
+package solutions.s4y.audio.pcm
 
 import android.content.Context
 import android.content.res.AssetFileDescriptor

@@ -1,4 +1,4 @@
-package solutions.s4y.pcm
+package solutions.s4y.audio.pcm
 
 class PCM16000Resampler(upstream: IPCMProvider, inputSampleRate: Int): IPCMProvider {
     override val floats: FloatArray by lazy {
