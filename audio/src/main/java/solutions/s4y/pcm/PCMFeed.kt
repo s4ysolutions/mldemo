@@ -1,14 +1,10 @@
 package solutions.s4y.pcm
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.shareIn
 
-class PCMFeed() : IPCMFeed {
+class PCMFeed: IPCMFeed {
     companion object {
         fun absMax(arr: ShortArray): Int {
             var max = 0
@@ -26,6 +22,8 @@ class PCMFeed() : IPCMFeed {
             }
             return max
         }
+
+        private const val SAMPLE_RATE = 16000
     }
 
     private var onAddPCM: (FloatArray) -> Unit = {}
@@ -34,8 +32,6 @@ class PCMFeed() : IPCMFeed {
     override fun close() {
         onClosePCM()
     }
-
-    private val SAMPLE_RATE = 16000
 
     private var _batch = SAMPLE_RATE
     private val samplesArrays = mutableListOf<ShortArray>()
@@ -46,11 +42,12 @@ class PCMFeed() : IPCMFeed {
     override var batch: Int
         get() = _batch
         set(value) {
+            // TODO: synchronization?
             _batch = value
             reset()
         }
 
-    private fun addSamplesNotSync(shortsArray: ShortArray): Unit {
+    private fun addSamplesNotSync(shortsArray: ShortArray) {
         samplesCount += shortsArray.size
         val above = samplesCount - _batch
         if (above >= 0) {
@@ -58,7 +55,7 @@ class PCMFeed() : IPCMFeed {
             // and rest is the left for the next batch
             val array: ShortArray
             val rest: ShortArray?
-            val samplesLast = if (above > 0) {
+            if (above > 0) {
                 array = shortsArray.copyOfRange(0, shortsArray.size - above)
                 rest = shortsArray.copyOfRange(shortsArray.size - above, shortsArray.size)
             } else {
