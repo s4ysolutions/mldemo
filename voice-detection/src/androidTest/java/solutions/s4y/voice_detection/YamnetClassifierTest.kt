@@ -46,6 +46,7 @@ class YamnetClassifierTest {
         }
         delay(10)
         classifier.close()
+        job.join()
         // Assert
         assertEquals(duration, results.size)
         results.forEach {
