@@ -44,6 +44,10 @@ kotlin {
     jvmToolchain(17)
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(project(":audio"))
     implementation(project(":firebase"))
@@ -64,12 +68,13 @@ dependencies {
     implementation(libs.tensorflow.lite)
     implementation(libs.tensorflow.lite.support)
     implementation(libs.tensorflow.lite.gpu.delegate.plugin)
-    //implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0")
     implementation(libs.tensorflow.lite.gpu)
     implementation(libs.tensorflow.lite.gpu.api)
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
 
     androidTestImplementation(project(":firebase"))
     androidTestImplementation(libs.androidx.junit)
