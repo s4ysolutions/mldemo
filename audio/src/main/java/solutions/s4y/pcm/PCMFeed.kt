@@ -121,5 +121,5 @@ class PCMFeed() : IPCMFeed {
         onAddPCM = { trySend(it) }
         onClosePCM = { close() }
         awaitClose()
-    }// .shareIn(scope, started = SharingStarted.Eagerly)
+    }
 }
