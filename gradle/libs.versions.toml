@@ -7,6 +7,7 @@ composeBom = "2024.06.00"
 coreKtx = "1.13.1"
 espressoCore = "3.6.1"
 firebaseStorage = "21.0.0"
+gson = "2.10.1"
 jetbrainsKotlinJvm = "1.9.24"
 junit = "4.13.2"
 junitBom = "5.10.3"
@@ -35,6 +36,7 @@ tensorflowLiteGpuApi = "2.16.1"
 tensorflowLiteGpuDelegatePlugin = "0.4.4"
 tensorflowLiteSupport = "0.4.4"
 tensorflowLiteTaskAudio = "0.4.4"
+tensorflowLiteMetadata = "0.1.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -47,6 +49,7 @@ androidx-media3-extractor = { module = "androidx.media3:media3-extractor", versi
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 firebase-storage = { module = "com.google.firebase:firebase-storage", version.ref = "firebaseStorage" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -74,6 +77,7 @@ tensorflow-lite-gpu-api = { module = "org.tensorflow:tensorflow-lite-gpu-api", v
 tensorflow-lite-gpu-delegate-plugin = { module = "org.tensorflow:tensorflow-lite-gpu-delegate-plugin", version.ref = "tensorflowLiteGpuDelegatePlugin" }
 tensorflow-lite-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflowLiteSupport" }
 tensorflow-lite-task-audio = { module = "org.tensorflow:tensorflow-lite-task-audio", version.ref = "tensorflowLiteTaskAudio" }
+tensorflow-lite-metadata = { group = "org.tensorflow", name = "tensorflow-lite-metadata", version.ref = "tensorflowLiteMetadata" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

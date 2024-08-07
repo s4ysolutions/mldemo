@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.firebase.storage)
+    implementation(libs.gson)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.pytorch.android.lite)
 
@@ -77,6 +78,7 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
 
     androidTestImplementation(project(":firebase"))
+    androidTestImplementation(libs.gson)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
