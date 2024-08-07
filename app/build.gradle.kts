@@ -71,7 +71,7 @@ dependencies {
     // implementation(project(":app:ui:interaction"))
     implementation(project(":guesser"))
     implementation(project(":voice-detection"))
-    implementation(project(":voice-transcription"))
+    implementation(project(":asr"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

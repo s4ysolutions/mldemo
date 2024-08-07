@@ -29,7 +29,7 @@ rootProject.name = "MLDemo"
 include(":app")
 // include(":app:ui:interaction")
 // include(":guesser")
-include(":voice-transcription")
+include(":asr")
 include(":audio")
 include(":voice-detection")
 include(":guesser")
