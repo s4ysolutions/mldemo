@@ -1,6 +1,7 @@
 package solutions.s4y.audio.pcm
 
 class PCM16000Resampler(upstream: IPCMProvider, inputSampleRate: Int): IPCMProvider {
+    /*
     override val floats: FloatArray by lazy {
         val input = upstream.floats
         when (inputSampleRate) {
@@ -19,7 +20,7 @@ class PCM16000Resampler(upstream: IPCMProvider, inputSampleRate: Int): IPCMProvi
                 throw IllegalArgumentException("Unsupported sample rate: $inputSampleRate")
             }
         }
-    }
+    }*/
 
     override val shorts: ShortArray by lazy {
         val input = upstream.shorts

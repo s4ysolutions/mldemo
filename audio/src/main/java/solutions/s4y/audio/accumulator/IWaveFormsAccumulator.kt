@@ -9,6 +9,7 @@ interface IWaveFormsAccumulator<T: Any, A: Any>: Closeable {
      */
     var batch: Int
     val flow: Flow<FloatArray>
-    fun add(waveForms: A)
+    fun add(pcm: ShortArray)
+    fun add(waveForms: FloatArray)
     fun reset()
 }

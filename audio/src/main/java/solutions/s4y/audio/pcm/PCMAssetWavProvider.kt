@@ -40,10 +40,8 @@ class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
             if (n<bytesSize) {
                 break
             }
-
             extractor.advance()
         }
-
 
         val result = ShortArray(shortsCount)
 
@@ -55,7 +53,7 @@ class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
 
         result
     }
-
+/*
     // TODO: rewrite, it is not suspected to work
     override val floats: FloatArray by lazy {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
@@ -96,4 +94,5 @@ class PCMAssetWavProvider(context: Context, asset: String): IPCMProvider {
         }
         floats
     }
+ */
 }

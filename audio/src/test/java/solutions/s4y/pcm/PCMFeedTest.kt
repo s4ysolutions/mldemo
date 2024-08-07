@@ -178,4 +178,31 @@ class PCMFeedTest {
         inOrder.verify(cb, times(1)).invoke(floatArrayOf(.1f, .2f, .3f))
         inOrder.verify(cb, times(1)).invoke(floatArrayOf(.4f, .5f, .6f))
     }
+
+    @Test
+    fun flow_shouldEmit_When282624() = runBlocking {
+        // Arrange
+        val accumulator = PCMFeed(16*3000)
+        val results = mutableListOf<FloatArray>()
+        val cb: (FloatArray) -> Unit = mock()
+        // Act
+        val job = launch {
+            accumulator.flow
+                .map { r(it) }
+                .onEach(cb)
+                .toList(results)
+        }
+        delay(1)
+        val shorts = ShortArray(282624) { it.toShort() }
+        accumulator.add(shorts)
+        accumulator.close()
+        job.join()
+
+        // Assert
+        assertEquals(5, results.size)
+        results.forEach {
+            assertEquals(16*3000, it.size)
+        }
+        verify(cb, times(5)).invoke(any())
+    }
 }

@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import solutions.s4y.mldemo.guesser.GuesserScreen
 import solutions.s4y.mldemo.voice_detection.ui.VoiceDetectionScreen
-import solutions.s4y.mldemo.voice_transcription.ui.VoiceTranscriptionScreen
+import solutions.s4y.mldemo.asr.ui.VoiceTranscriptionScreen
 
 @Composable
 fun MainNavHost(navController: NavHostController) {

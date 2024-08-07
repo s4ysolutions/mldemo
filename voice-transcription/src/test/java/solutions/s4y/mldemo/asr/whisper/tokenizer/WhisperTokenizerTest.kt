@@ -2,7 +2,7 @@ package solutions.s4y.mldemo.asr.whisper.tokenizer
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import solutions.s4y.mldemo.asr.whisper.WhisperTokenizer
+import solutions.s4y.mldemo.asr.service.whisper.WhisperTokenizer
 import solutions.s4y.mldemo.asr.whisper.tokenizer.fixtures.Fixtures
 
 class WhisperTokenizerTest : Fixtures {
