@@ -1,5 +1,6 @@
 package solutions.s4y.mldemo.asr.service.whisper
 
+import android.content.Context
 import org.tensorflow.lite.DataType
 import java.io.File
 import org.tensorflow.lite.InterpreterApi
@@ -7,12 +8,16 @@ import org.tensorflow.lite.TensorFlowLite
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.gpu.GpuDelegate
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.channels.FileChannel
 
-class Whisper(
-    file: File,
+class WhisperInferrer(
+    byteBuffer: ByteBuffer,
 ) {
+    constructor(file: File) : this(loadModelFile(file))
+    constructor(context: Context, assetModelPath: String) : this(loadModelAssetFile(context, assetModelPath))
     private val interpreter: InterpreterApi
 
     init {
@@ -28,7 +33,7 @@ class Whisper(
         } else {
             options.setNumThreads(Runtime.getRuntime().availableProcessors())
         }
-        interpreter = InterpreterApi.create(file, options)
+        interpreter = InterpreterApi.create(byteBuffer, options)
     }
 
     // must be run in the same thread as runInference addDelegate
@@ -71,5 +76,30 @@ class Whisper(
         // should be monitored
         // (System.currentTimeMillis() - time).toString())
         return result
+    }
+
+    companion object {
+        private const val MODEL_PATH = "whisper.tflite"
+
+        private fun loadModelFile(file: File): ByteBuffer {
+            val inputStream = FileInputStream(file)
+            val fileChannel = inputStream.channel
+            val startOffset = 0L
+            val declaredLength = fileChannel.size()
+            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength).apply {
+                order(ByteOrder.nativeOrder())
+            }
+        }
+
+        private fun loadModelAssetFile(context: Context, assetModelPath: String): ByteBuffer {
+            val assetFileDescriptor = context.assets.openFd(assetModelPath)
+            val fileInputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
+            val fileChannel = fileInputStream.channel
+            val startOffset = assetFileDescriptor.startOffset
+            val declaredLength = assetFileDescriptor.declaredLength
+            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength).apply {
+                order(ByteOrder.nativeOrder())
+            }
+        }
     }
 }

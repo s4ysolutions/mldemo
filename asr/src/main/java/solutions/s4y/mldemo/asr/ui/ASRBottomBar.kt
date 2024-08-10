@@ -24,7 +24,7 @@ import solutions.s4y.mldemo.voice_detection.viewmodels.VoiceDetectionViewModel
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun VoiceDetectionBottomBar(viewModel: VoiceDetectionViewModel = VoiceDetectionViewModel()) {
+fun ASRBottomBar(viewModel: VoiceDetectionViewModel = VoiceDetectionViewModel()) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 

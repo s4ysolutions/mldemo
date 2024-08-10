@@ -43,6 +43,7 @@ android {
 dependencies {
 
     implementation(project(":audio"))
+    implementation(libs.accompanist.permissions)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.androidx.compose.bom))
@@ -57,7 +58,6 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.tensorflow.lite)
     implementation(libs.tensorflow.lite.task.audio)
-    implementation(libs.accompanist.permissions)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.junit)

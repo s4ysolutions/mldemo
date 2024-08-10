@@ -10,7 +10,7 @@ import solutions.s4y.mldemo.asr.ui.VoiceTranscriptionScreen
 
 @Composable
 fun MainNavHost(navController: NavHostController) {
-    NavHost(navController, startDestination = Destinations.VoiceDetection.route) {
+    NavHost(navController, startDestination = Destinations.VoiceTranscription.route) {
         composable(Destinations.VoiceDetection.route) {
             VoiceDetectionScreen()
         }

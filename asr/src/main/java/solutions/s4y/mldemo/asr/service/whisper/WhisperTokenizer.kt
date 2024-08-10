@@ -7,7 +7,7 @@ import java.io.InputStreamReader
 
 class WhisperTokenizer(jsonString: String) {
     constructor(jsonFile: File) : this(InputStreamReader(jsonFile.inputStream()))
-    constructor(jsonStream: InputStreamReader) : this(jsonStream.use { it.readText() })
+    private constructor(jsonStream: InputStreamReader) : this(jsonStream.use { it.readText() })
 
     private val specialTokens: Map<Int, String>
     private val unicodeTokens: Map<Int, String>

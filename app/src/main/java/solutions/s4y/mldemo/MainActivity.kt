@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import solutions.s4y.mldemo.asr.ui.ASRBottomBar
 import solutions.s4y.mldemo.theme.MLDemoTheme
 import solutions.s4y.mldemo.ui.composable.MainDrawer
 import solutions.s4y.mldemo.ui.composable.MainTopAppBar
@@ -71,7 +72,7 @@ class MainActivity : ComponentActivity() {
                                     VoiceDetectionBottomBar()
                                 }
                                 Destinations.VoiceTranscription.route -> {
-                                    // VoiceTranscriptionBottomBar()
+                                    ASRBottomBar()
                                 }
                             }
                         },

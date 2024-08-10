@@ -15,19 +15,22 @@ import solutions.s4y.audio.accumulator.WaveFormsAccumulator
 import solutions.s4y.firebase.FirebaseBlob
 import solutions.s4y.mldemo.googleServicesOptionsBuilder
 import solutions.s4y.audio.mel.IMelSpectrogram
-import solutions.s4y.audio.mel.KotlinMelSpectrogram
 import solutions.s4y.audio.pcm.PCMAssetWavProvider
-import solutions.s4y.mldemo.asr.service.whisper.Whisper
+import solutions.s4y.mldemo.asr.service.whisper.WhisperInferrer
+import solutions.s4y.mldemo.asr.service.whisper.WhisperTFLogMel
 import solutions.s4y.mldemo.asr.service.whisper.WhisperTokenizer
 import java.io.File
 import java.io.InputStreamReader
 
 class WhisperRule : MethodRule {
-    private var initialized = false
+    companion object {
+        private var initialized = false
+        private val sync = Any()
+    }
 
     lateinit var context: Context
 
-    val waveFormsAccumulator:WaveFormsAccumulator by lazy {
+    val waveFormsAccumulator: WaveFormsAccumulator by lazy {
         WaveFormsAccumulator()
     }
 
@@ -35,9 +38,14 @@ class WhisperRule : MethodRule {
         PCMFeed()
     }
 
-    val melSpectrogramTransformer: IMelSpectrogram by lazy { KotlinMelSpectrogram() }
+    val whisperTFLogMel: IMelSpectrogram by lazy {
+        WhisperTFLogMel(
+            context,
+            "features-extractor.tflite"
+        )
+    }
 
-    val model: Whisper by lazy {
+    val modelFirebaseCS: WhisperInferrer by lazy {
         val modelFile: File
         runBlocking {
             File(context.filesDir, "ml").mkdirs()
@@ -46,7 +54,16 @@ class WhisperRule : MethodRule {
                 File(context.filesDir, "ml/whisper.tflite")
             ).get()
         }
-        Whisper(modelFile)
+        WhisperInferrer(modelFile)
+    }
+
+    val modelBaseAr: WhisperInferrer by lazy {
+        WhisperInferrer(context, "ml/whisper-base-ar.tflite")
+    }
+
+    val modelBaseEn: WhisperInferrer by lazy {
+        val modelFile: File
+        WhisperInferrer(context, "ml/whisper-base-en.tflite")
     }
 
     val tokenizer: WhisperTokenizer by lazy {
@@ -61,12 +78,22 @@ class WhisperRule : MethodRule {
         WhisperTokenizer(tokenizerFile)
     }
 
-    val testPCM: ShortArray by lazy {
+    val testPCMAr11: ShortArray by lazy {
         val p = PCMAssetWavProvider(context, "adam/1-1.wav")
         p.shorts
     }
 
-    val testMel: FloatArray by lazy {
+    val testWaveFormsAr11: FloatArray by lazy {
+        val p = PCMAssetWavProvider(context, "adam/1-1.wav")
+        p.floats
+    }
+
+    val testWaveFormsEn: FloatArray by lazy {
+        val p = PCMAssetWavProvider(context, "OSR_us_000_0030_16k.wav")
+        p.floats
+    }
+
+    val testMelAr11: FloatArray by lazy {
         val inputStream = context.assets.open("adam/1-1-mel.json")
         val reader = InputStreamReader(inputStream)
         val melData: MutableList<MutableList<MutableList<Float>>> = mutableListOf()
@@ -89,7 +116,7 @@ class WhisperRule : MethodRule {
         melData.flatten().flatten().toFloatArray()
     }
 
-    val testTokens: IntArray by lazy {
+    val testTokensAr11: IntArray by lazy {
         val inputStream = context.assets.open("adam/1-1-tokens.json")
         val reader = InputStreamReader(inputStream)
         val tokensData: MutableList<MutableList<Int>> = mutableListOf()
@@ -108,10 +135,10 @@ class WhisperRule : MethodRule {
     }
 
     val tsetTokesSet: Set<Int> by lazy {
-        testTokens.toSet()
+        testTokensAr11.toSet()
     }
 
-    val testTranscription: String by lazy {
+    val testTranscriptionAr11: String by lazy {
         val inputStream = context.assets.open("adam/1-1-transcription.txt")
         val reader = InputStreamReader(inputStream)
         val transcription = reader.readText()
@@ -121,11 +148,13 @@ class WhisperRule : MethodRule {
 
     override fun apply(base: Statement, method: FrameworkMethod?, target: Any?): Statement {
         val app = ApplicationProvider.getApplicationContext<Application>()
-        if (!initialized) {
-            val builder: FirebaseOptions.Builder = googleServicesOptionsBuilder()
-            val options = builder.build()
-            FirebaseApp.initializeApp(app, options, "[DEFAULT]")
-            initialized = true
+        synchronized(sync) {
+            if (!initialized) {
+                val builder: FirebaseOptions.Builder = googleServicesOptionsBuilder()
+                val options = builder.build()
+                FirebaseApp.initializeApp(app, options, "[DEFAULT]")
+                initialized = true
+            }
         }
         context = app
 
