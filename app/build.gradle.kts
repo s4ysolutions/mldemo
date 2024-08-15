@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("kotlin-kapt")
+    alias(libs.plugins.hilt.android)
 }
 
 android {
@@ -68,6 +70,8 @@ android {
 }
 
 dependencies {
+    kapt(libs.dagger.hilt.android.compiler)
+
     // implementation(project(":app:ui:interaction"))
     implementation(project(":guesser"))
     implementation(project(":voice-detection"))
@@ -83,6 +87,7 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.dagger.hilt.android)
 
     testImplementation(libs.junit)
 
@@ -93,4 +98,8 @@ dependencies {
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+kapt {
+    correctErrorTypes = true
 }

@@ -14,8 +14,11 @@ import kotlinx.coroutines.flow.map
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.atomic.AtomicLong
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AudioService {
+@Singleton
+class AudioService @Inject constructor() {
     enum class RecordingStatus {
         IDLE,
         RECORDING,

@@ -16,8 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModelStoreOwner
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -30,7 +29,7 @@ import solutions.s4y.mldemo.voice_detection.viewmodels.VoiceDetectionViewModel
 @Composable
 fun VoiceDetectionBottomBar(
 ) {
-    val viewModel: VoiceDetectionViewModel = viewModel(factory = VoiceDetectionViewModel.Factory)
+    val viewModel: VoiceDetectionViewModel = hiltViewModel()
 
     val scope = rememberCoroutineScope()
 

@@ -1,6 +1,7 @@
 package solutions.s4y.mldemo.voice_detection
 
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -12,9 +13,12 @@ import kotlinx.coroutines.flow.onEach
 import solutions.s4y.audio.accumulator.PCMFeed
 import solutions.s4y.mldemo.voice_detection.yamnet.IVoiceClassifier
 import solutions.s4y.mldemo.voice_detection.yamnet.YamnetVoiceClassifier
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class VoiceClassificationService(context: Context) {
-    private val classificator: IVoiceClassifier
+@Singleton
+class VoiceClassificationService @Inject constructor(@ApplicationContext context: Context) {
+    private val classifier: IVoiceClassifier
     private val _flowLabels: MutableSharedFlow<List<String>> =
         MutableSharedFlow(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private var jobAudioSamples: Job? = null
@@ -22,7 +26,7 @@ class VoiceClassificationService(context: Context) {
     private val pcmFeed = PCMFeed(YamnetVoiceClassifier.PCM_BATCH)
 
     init {
-        classificator = YamnetVoiceClassifier(context, pcmFeed)
+        classifier = YamnetVoiceClassifier(context, pcmFeed)
     }
 
     fun start(samplesFlow: Flow<ShortArray>, scope: CoroutineScope) {
@@ -32,10 +36,10 @@ class VoiceClassificationService(context: Context) {
                 pcmFeed.add(samples)
             }
             .launchIn(scope)
-        jobClassifier = classificator.flow
+        jobClassifier = classifier.flow
             .onEach {
-                val labels = classificator.labels(it.ids)
-                val probabilities = classificator.probabilities(it.ids)
+                val labels = classifier.labels(it.ids)
+                val probabilities = classifier.probabilities(it.ids)
                 _flowLabels.tryEmit(labels.zip(probabilities) { label, probability -> "$probability|$label" })
             }
             .launchIn(scope)

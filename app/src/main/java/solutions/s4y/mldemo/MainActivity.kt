@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import solutions.s4y.mldemo.asr.ui.ASRBottomBar
 import solutions.s4y.mldemo.theme.MLDemoTheme
@@ -28,7 +29,7 @@ import solutions.s4y.mldemo.ui.composable.navigation.MainNavHost
 import solutions.s4y.mldemo.ui.composable.navigation.MainNavRouter
 import solutions.s4y.mldemo.voice_detection.ui.VoiceDetectionBottomBar
 
-@OptIn(ExperimentalMaterial3Api::class)
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
