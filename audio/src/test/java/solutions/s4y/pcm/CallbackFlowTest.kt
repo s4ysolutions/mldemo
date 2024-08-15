@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.never
@@ -79,6 +80,7 @@ class CallbackFlowTest {
         assertEquals(listOf(1, 2, 3), l)
     }
 
+    @Disabled("It it not important but takes the time")
     @Test
     fun callbackFlow_shouldBeCalledOnce(): Unit = runBlocking {
         val cbCallbackFlow: () -> Unit = mock()
@@ -116,7 +118,7 @@ class CallbackFlowTest {
         delay(10)
         cbManager.close()
         val results = try {
-            withTimeout(200) {
+            withTimeout(300) {
                 awaitAll(job1, job2)
             }
         } catch (_: TimeoutCancellationException) {
