@@ -15,22 +15,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import solutions.s4y.audio.AudioService
-import solutions.s4y.mldemo.voice_detection.viewmodels.VoiceDetectionViewModel
+import solutions.s4y.mldemo.asr.viewmodels.ASRViewModel
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ASRBottomBar(viewModel: VoiceDetectionViewModel = VoiceDetectionViewModel()) {
+fun ASRBottomBar(viewModel: ASRViewModel = viewModel(factory = ASRViewModel.Factory)) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val au = viewModel.audioService
-    val classifier = viewModel.voiceClassificationService(context)
-    val auStatus = au.recordingStatusFlow.collectAsState(initial = au.currentStatus)
+    // val au = viewModel.audioService
+    // val classifier = viewModel.classifier
+    // val auStatus = au.recordingStatusFlow.collectAsState(initial = au.currentStatus)
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
     BottomAppBar(
@@ -39,25 +40,29 @@ fun ASRBottomBar(viewModel: VoiceDetectionViewModel = VoiceDetectionViewModel())
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
+                    /*
                     if (permissionState.status.isGranted) {
                         if (auStatus.value == AudioService.RecordingStatus.RECORDING) {
                             au.stopRecording()
                             classifier.stop()
                         } else {
                             au.startRecording()
-                            classifier.start(scope)
+                            classifier.start(au.samplesFlow, scope)
                         }
                     } else {
                         permissionState.launchPermissionRequest()
                     }
+                     */
                 },
                 containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                 elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
             ) {
                 if (permissionState.status.isGranted) {
+                    /*
                     if (auStatus.value == AudioService.RecordingStatus.RECORDING)
                         Icon(Icons.Filled.StopCircle, "Stop recording")
                     else
+                     */
                         Icon(Icons.Filled.PlayCircle, "Start recording")
                 } else {
                     Icon(Icons.Filled.PlayDisabled, "Request permission")

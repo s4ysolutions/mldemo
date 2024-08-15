@@ -1,32 +1,32 @@
 package solutions.s4y.mldemo.voice_detection.ui
 
 import android.Manifest
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import kotlinx.coroutines.flow.map
 import solutions.s4y.mldemo.voice_detection.viewmodels.VoiceDetectionViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun VoiceDetectionScreen() {
-    val context = LocalContext.current
-    val viewModel: VoiceDetectionViewModel = remember { VoiceDetectionViewModel() }
+    val viewModel: VoiceDetectionViewModel = viewModel(factory = VoiceDetectionViewModel.Factory)
     val audio = viewModel.audioService
-    val classifier = viewModel.voiceClassificationService(context)
+    val classifier = viewModel.classifier
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
     val samplesCount = audio.samplesCountFlow.collectAsState(initial = audio.samplesCount)
 
-    val classes = classifier.labelsFlow.map { it.labels }
+    val classes = classifier.flowLabels
         .collectAsState(initial = listOf("No classes yet"))
 
     if (permissionState.status.isGranted) {

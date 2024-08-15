@@ -146,6 +146,14 @@ class WhisperRule : MethodRule {
         transcription
     }
 
+    val testTranscriptionAr11WithError: String by lazy {
+        val inputStream = context.assets.open("adam/1-1-transcription-with-error.txt")
+        val reader = InputStreamReader(inputStream)
+        val transcription = reader.readText()
+        reader.close()
+        transcription
+    }
+
     override fun apply(base: Statement, method: FrameworkMethod?, target: Any?): Statement {
         val app = ApplicationProvider.getApplicationContext<Application>()
         synchronized(sync) {

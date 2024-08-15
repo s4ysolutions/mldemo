@@ -1,8 +1,15 @@
 package solutions.s4y.mldemo.voice_detection.yamnet
 
 import android.content.Context
+import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flow
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.audio.TensorAudio
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -21,13 +28,17 @@ import java.nio.channels.FileChannel
  *               emitted. This is small optimization
  *               to avoid unnecessary emissions.
  */
-class YamnetClassifier(
+class YamnetVoiceClassifier(
     context: Context,
-    filter: ((List<Int>) -> Boolean)? = null
-) : IVoiceClassificator {
+    pcmFeed: PCMFeed,
+    private val scopeInference: CoroutineScope = CoroutineScope(Dispatchers.Default)
+) : IVoiceClassifier {
     companion object {
-        private const val MODEL_PATH = "yamnet.tflite"
         private const val LABELS_PATH = "yamnet_label_list.txt"
+        private const val MODEL_PATH = "yamnet.tflite"
+        const val PCM_BATCH = 15600
+        private val TAG: String = YamnetVoiceClassifier::class.java.simpleName
+
         private val format = TensorAudio.TensorAudioFormat.builder()
             .setChannels(1)
             .setSampleRate(16000)
@@ -36,13 +47,15 @@ class YamnetClassifier(
 
     private val interpreter: Interpreter
     private val labels: List<String>
+
     private val decoder: IDecoder
-    private val pcmFeed: PCMFeed = PCMFeed()
+
+    // private val pcmFeed: PCMFeed = PCMFeed()
     private val outputBuffer0: TensorBuffer
     private var inputTensor: TensorAudio? = null
     private var inputBuffer: TensorBuffer? = null
     private var inputBuf: ByteBuffer? = null
-    private var prevWaveFormSize: Int = 0
+    private var prevWaveFormsSize: Int = 0
 
     init {
         val assetFileDescriptor = context.assets.openFd(MODEL_PATH)
@@ -58,7 +71,9 @@ class YamnetClassifier(
         // for noises like rain, wind, etc
         // decoder = DecoderAverage(labels, 3)
 
-        pcmFeed.batch = 15600 // https://www.kaggle.com/models/google/yamnet/tfLite
+        if (pcmFeed.batch != PCM_BATCH)
+            throw Exception("pcmFeed.batch must be 15600, see https://www.kaggle.com/models/google/yamnet/tfLite")
+        // pcmFeed.batch = 15600 // https://www.kaggle.com/models/google/yamnet/tfLite
         interpreter = Interpreter(modelFile)
         val dim = interpreter.getOutputTensor(0).shape()[1]
         // TODO: handle error
@@ -72,11 +87,12 @@ class YamnetClassifier(
             )
     }
 
+    // TODO: disable parallel processing
     private fun waveForms2Probabilities(waveForms: FloatArray): FloatArray {
         var _inputTensor = inputTensor
         var _inputBuffer = inputBuffer
         var _inputBuf = inputBuf
-        if (_inputTensor == null  || _inputBuffer == null || _inputBuf == null || prevWaveFormSize != waveForms.size) {
+        if (_inputTensor == null || _inputBuffer == null || _inputBuf == null || prevWaveFormsSize != waveForms.size) {
             _inputTensor = TensorAudio.create(format, waveForms.size)
             _inputBuffer = _inputTensor.tensorBuffer
             val inputSize = waveForms.size * java.lang.Float.BYTES
@@ -85,7 +101,7 @@ class YamnetClassifier(
             inputTensor = _inputTensor
             inputBuffer = _inputBuffer
             inputBuf = _inputBuf
-            prevWaveFormSize = waveForms.size
+            prevWaveFormsSize = waveForms.size
         }
         _inputTensor!!.load(waveForms)
         for (input in waveForms) {
@@ -98,24 +114,35 @@ class YamnetClassifier(
         return probabilities
     }
 
-    override fun addSamples(samples: ShortArray) {
-        pcmFeed.add(samples)
-    }
+    private var inferenceJob: Job? = null
 
-    override val probabilitiesFlow =  pcmFeed.flow
-        .map{ waveForms -> IVoiceClassificator.Probabilities(waveForms2Probabilities(waveForms), waveForms) }
-        .filter { p ->
-            decoder.add(p.probabilities)
-            filter == null || filter(decoder.probabilitiesIndicesDescended)
-        }
-
-    override val labelsFlow = probabilitiesFlow
-        .map { p ->
-            IVoiceClassificator.Labels(decoder.labelsDescended, p.waveForms)
+    // TODO: add synchronization of inferenceJob modification
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val flow = pcmFeed.flow
+        .flatMapMerge { waveForms ->
+            if (inferenceJob != null) {
+                Log.w(TAG, "inferenceJob != null, it will be canceled")
+            }
+            inferenceJob?.cancel()
+            inferenceJob = null
+            val deferred = scopeInference.async {
+                val probabilities = waveForms2Probabilities(waveForms)
+                decoder.add(probabilities)
+                IVoiceClassifier.Classes(decoder.classesDescended, waveForms)
+            }
+            inferenceJob = deferred
+            flow {
+                val probabilities = deferred.await()
+                inferenceJob = null
+                emit(probabilities)
+            }
         }
 
     override fun close() {
-        pcmFeed.close()
         interpreter.close()
     }
+
+    override fun labels(classes: List<Int>): List<String> = decoder.labels(classes)
+
+    override fun probabilities(classes: List<Int>): List<Float> = decoder.probabilities(classes)
 }

@@ -3,6 +3,7 @@ package solutions.s4y.mldemo.asr.service.whisper
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -63,15 +64,10 @@ class WhisperInferrerTest {
         fun runInference_shouldRecognizeArabicMel_whenArabicModel() {
             // Act
             val tokens = whisper.modelBaseAr.runInference(whisper.testMelAr11)
+            val transcription = whisper.tokenizer.decode(tokens, skipSpecial = true)
             // Assert
-            var count = 0
-            val tokensSet = tokens.toSet()
-            whisper.testTokensAr11.forEach {
-                if (tokensSet.contains(it)) {
-                    count++
-                }
-            }
-            assertTrue("3 tokens were not found in the model output", whisper.testTokensAr11.size - count < 3)
+            assertEquals(whisper.testTokensAr11.size, tokens.size)
+            assertEquals(whisper.testTranscriptionAr11, transcription)
         }
     }
 }
