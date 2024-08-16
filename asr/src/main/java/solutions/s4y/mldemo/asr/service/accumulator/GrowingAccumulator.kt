@@ -9,7 +9,7 @@ class GrowingAccumulator() {
     private val lock: Mutex = Mutex()
 
     suspend fun reset() = lock.withLock {
-            println("reset")
+        if (sequenceBuffer.isNotEmpty())
             sequenceBuffer = FloatArray(0)
     }
 
