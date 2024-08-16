@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.s4y.google.services)
+    id("kotlin-kapt")
+    alias(libs.plugins.hilt.android)
 }
 
 android {
@@ -49,12 +51,15 @@ tasks.withType<Test> {
 }
 
 dependencies {
+    kapt(libs.dagger.hilt.android.compiler)
+
     implementation(project(":audio"))
     implementation(project(":firebase"))
     implementation(project(":voice-detection"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -65,6 +70,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.dagger.hilt.android)
     implementation(libs.firebase.storage)
     implementation(libs.gson)
     implementation(libs.kotlinx.coroutines.core)
@@ -89,7 +95,6 @@ dependencies {
     androidTestImplementation(libs.mockito.core)
     androidTestImplementation(libs.mockito.kotlin)
 }
-
 googleServiceLibrary {
     googleCloudAppId = "solutions.s4y.mldemo"
     classPackage = "solutions.s4y.voice_transcription"
