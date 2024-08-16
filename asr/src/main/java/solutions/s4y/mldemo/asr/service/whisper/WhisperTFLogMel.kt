@@ -11,6 +11,8 @@ import java.nio.channels.FileChannel
 import kotlin.math.min
 
 class WhisperTFLogMel(context: Context, assetModelPath: String) : IMelSpectrogram {
+
+    constructor(context: Context) : this(context, MODEL_PATH)
     private val interpreter: Interpreter
     private val inputBuffer1: TensorBuffer
     private val outputBuffer0: TensorBuffer

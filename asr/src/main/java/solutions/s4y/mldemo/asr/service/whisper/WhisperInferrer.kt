@@ -18,6 +18,7 @@ class WhisperInferrer(
 ) {
     constructor(file: File) : this(loadModelFile(file))
     constructor(context: Context, assetModelPath: String) : this(loadModelAssetFile(context, assetModelPath))
+    constructor(context: Context) : this(context, MODEL_PATH)
     private val interpreter: InterpreterApi
 
     init {
