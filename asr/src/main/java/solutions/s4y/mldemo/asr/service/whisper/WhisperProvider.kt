@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.min
 
 class WhisperProvider(
-    private val waveFormsFlow: Flow<FloatArray>,
+    waveFormsFlow: Flow<FloatArray>,
     private val melSpectrogram: IMelSpectrogram,
     private val model: WhisperInferrer,
     private val tokenizer: WhisperTokenizer,
@@ -32,7 +32,7 @@ class WhisperProvider(
     private var queuedWaveForms = AtomicReference<FloatArray?>(null)
 
     // the flow of decoded strings
-    val flow: Flow<String>?
+    val flow: Flow<String>
 
     init {
         @Suppress("OPT_IN_USAGE")
@@ -73,6 +73,7 @@ class WhisperProvider(
             .filter { it.isNotEmpty() }
     }
 
+    // TODO: should have a variant with list of words
     // internal for testing
     internal fun decodeWaveForms(waveForms: FloatArray): String {
         // pad or truncate to 30 seconds
