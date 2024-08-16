@@ -1,11 +1,21 @@
 package solutions.s4y.mldemo.asr.service.whisper
 
+import android.content.Context
 import com.google.gson.Gson
 import solutions.s4y.mldemo.asr.service.whisper.tokenizer.json.TokenizerJSON
 import java.io.File
 import java.io.InputStreamReader
 
 class WhisperTokenizer(jsonString: String) {
+    constructor(context: Context) : this(context, JSON_PATH)
+    constructor(context: Context, assetPath: String) : this(
+        InputStreamReader(
+            context.assets.open(
+                assetPath
+            )
+        )
+    )
+
     constructor(jsonFile: File) : this(InputStreamReader(jsonFile.inputStream()))
     private constructor(jsonStream: InputStreamReader) : this(jsonStream.use { it.readText() })
 
@@ -39,7 +49,7 @@ class WhisperTokenizer(jsonString: String) {
         specialTokens = mutableMapOf()
         unicodeTokens = mutableMapOf()
         tokenizerJson.addedTokens
-            .forEach {it ->
+            .forEach { it ->
                 if (it.special) {
                     specialTokens[it.id] = it.content
                 } else {
@@ -52,9 +62,16 @@ class WhisperTokenizer(jsonString: String) {
             }
     }
 
-    fun decode(tokens: IntArray, skipSpecial: Boolean = true): String {
+    // TODO: should have a variant with a list of words
+    fun decode(
+        tokens: IntArray,
+        skipSpecial: Boolean = true,
+        compactSameSpecialTokens: Boolean = true,
+        space: String = " "
+    ): String {
         val text = StringBuilder()
         val currentSubText = StringBuilder()
+        var prevSpecialToken: Int = -1
         tokens.forEach { token ->
             val specialToken = specialTokens[token]
             if (specialToken == null) {
@@ -68,6 +85,12 @@ class WhisperTokenizer(jsonString: String) {
                     currentSubText.clear()
                 }
                 if (!skipSpecial) {
+                    if (compactSameSpecialTokens) {
+                        if (prevSpecialToken == token) {
+                            return@forEach
+                        }
+                        prevSpecialToken = token
+                    }
                     text.append(specialToken)
                 }
             }
@@ -76,5 +99,9 @@ class WhisperTokenizer(jsonString: String) {
             text.append(tokens2string(currentSubText.toString()))
         }
         return text.toString()
+    }
+
+    companion object {
+        private const val JSON_PATH = "tokenizer.json"
     }
 }
