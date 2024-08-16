@@ -11,8 +11,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VoiceDetectionViewModel @Inject constructor(
-    @ApplicationContext context: Context,
     val audioService: AudioService,
     val classifier: VoiceClassificationService
-) : ViewModel() {
-}
+) : ViewModel()
