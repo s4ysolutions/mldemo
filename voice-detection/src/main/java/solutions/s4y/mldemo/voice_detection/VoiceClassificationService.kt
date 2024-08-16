@@ -21,6 +21,8 @@ class VoiceClassificationService @Inject constructor(@ApplicationContext context
     private val classifier: IVoiceClassifier
     private val _flowLabels: MutableSharedFlow<List<String>> =
         MutableSharedFlow(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val _flowClasses: MutableSharedFlow<IVoiceClassifier.Classes> =
+        MutableSharedFlow(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private var jobAudioSamples: Job? = null
     private var jobClassifier: Job? = null
     private val pcmFeed = PCMFeed(YamnetVoiceClassifier.PCM_BATCH)
@@ -38,9 +40,13 @@ class VoiceClassificationService @Inject constructor(@ApplicationContext context
             .launchIn(scope)
         jobClassifier = classifier.flow
             .onEach {
-                val labels = classifier.labels(it.ids)
-                val probabilities = classifier.probabilities(it.ids)
-                _flowLabels.tryEmit(labels.zip(probabilities) { label, probability -> "$probability|$label" })
+                if (_flowClasses.subscriptionCount.value > 0)
+                    _flowClasses.tryEmit(it)
+                if (_flowLabels.subscriptionCount.value > 0) {
+                    val labels = classifier.labels(it.ids)
+                    val probabilities = classifier.probabilities(it.ids)
+                    _flowLabels.tryEmit(labels.zip(probabilities) { label, probability -> "$probability|$label" })
+                }
             }
             .launchIn(scope)
     }
@@ -53,4 +59,5 @@ class VoiceClassificationService @Inject constructor(@ApplicationContext context
     }
 
     val flowLabels: SharedFlow<List<String>> = _flowLabels
+    val flowClasses: SharedFlow<IVoiceClassifier.Classes> = _flowClasses
 }
