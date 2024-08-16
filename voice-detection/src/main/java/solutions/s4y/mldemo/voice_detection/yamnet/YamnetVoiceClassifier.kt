@@ -50,7 +50,6 @@ class YamnetVoiceClassifier(
 
     private val decoder: IDecoder
 
-    // private val pcmFeed: PCMFeed = PCMFeed()
     private val outputBuffer0: TensorBuffer
     private var inputTensor: TensorAudio? = null
     private var inputBuffer: TensorBuffer? = null
