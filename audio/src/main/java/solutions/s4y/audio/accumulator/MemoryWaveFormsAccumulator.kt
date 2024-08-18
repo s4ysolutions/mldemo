@@ -107,6 +107,7 @@ internal class MemoryWaveFormsAccumulator<T : Any, A : Any>(override val batch: 
     private suspend fun tryEmit(flushArray: FloatArray): Boolean {
         // TODO: remove some day
         assert(flushArray.isNotEmpty())
+        println("=====> mutableSharedFlow.subscrcount ${mutableSharedFlow.subscriptionCount.value}")
         if (mutableSharedFlow.tryEmit(flushArray)) return true
         backpressure(flushArray)
         return false

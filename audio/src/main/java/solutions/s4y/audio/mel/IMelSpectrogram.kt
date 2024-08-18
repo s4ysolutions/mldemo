@@ -1,5 +1,7 @@
 package solutions.s4y.audio.mel
 
+import kotlinx.coroutines.Deferred
+
 interface IMelSpectrogram {
-    fun getMelSpectrogram(samples: FloatArray): FloatArray
+    suspend fun getMelSpectrogram(waveForms: FloatArray): Deferred<FloatArray>
 }

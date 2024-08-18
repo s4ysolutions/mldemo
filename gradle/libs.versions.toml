@@ -8,6 +8,7 @@ coreKtx = "1.13.1"
 espressoCore = "3.6.1"
 firebaseStorage = "21.0.0"
 gson = "2.10.1"
+googleServices = "4.4.2"
 daggerHilt = "2.44"
 hiltNavigationCompose = "1.2.0"
 jetbrainsKotlinJvm = "1.9.24"
@@ -94,3 +95,4 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "daggerHilt" }
 s4y-google-services = { id = "solutions.s4y.google-services", version.ref = "s4yGoogleServices" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

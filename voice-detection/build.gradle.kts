@@ -67,11 +67,17 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.dagger.hilt.android)
     implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.gpu)
+    implementation(libs.tensorflow.lite.gpu.api)
+    implementation(libs.tensorflow.lite.gpu.delegate.plugin)
+    implementation(libs.tensorflow.lite.support)
     implementation(libs.tensorflow.lite.task.audio)
+    implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.junit)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

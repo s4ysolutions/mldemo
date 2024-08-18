@@ -6,6 +6,10 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.gson.JsonParser
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import org.junit.rules.MethodRule
 import org.junit.runners.model.FrameworkMethod
@@ -30,6 +34,13 @@ class WhisperRule : MethodRule {
 
     lateinit var context: Context
 
+    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
+    val inferenceContext =  newSingleThreadContext("YamnetVoiceClassifierTest")
+
+    val inferenceScope: CoroutineScope = CoroutineScope(
+        inferenceContext
+    )
+
     val waveFormsAccumulator: WaveFormsAccumulator by lazy {
         WaveFormsAccumulator()
     }
@@ -41,29 +52,77 @@ class WhisperRule : MethodRule {
     val whisperTFLogMel: IMelSpectrogram by lazy {
         WhisperTFLogMel(
             context,
-            "features-extractor.tflite"
+            "features-extractor.tflite",
+            inferenceContext
         )
     }
 
     val modelFirebaseCS: WhisperInferrer by lazy {
-        val modelFile: File
-        runBlocking {
-            File(context.filesDir, "ml").mkdirs()
-            modelFile = FirebaseBlob(
-                "ml/whisper-1.0.1/whisper.tflite",
-                File(context.filesDir, "ml/whisper.tflite")
-            ).get()
-        }
-        WhisperInferrer(modelFile)
+        val modelFile: File =
+            runBlocking {
+                FirebaseBlob(
+                    "ml/whisper-1.0.1/whisper.tflite",
+                    File(context.filesDir, "ml/whisper.tflite")
+                ).get()
+            }
+        WhisperInferrer(modelFile, inferenceContext)
+    }
+
+    val modelTinyEnFirebaseCS: WhisperInferrer by lazy {
+        val path = "ml/whisper-2.0.0/whisper-tiny.en/whisper.tflite"
+        val modelFile: File =
+            runBlocking {
+                FirebaseBlob(
+                    path,
+                    File(context.filesDir, path)
+                ).get()
+            }
+        WhisperInferrer(modelFile, inferenceContext)
+    }
+
+    val modelTinyArFirebaseCS: WhisperInferrer by lazy {
+        val path = "ml/whisper-2.0.0/whisper-tiny.ar/whisper.tflite"
+        val modelFile: File =
+            runBlocking {
+                FirebaseBlob(
+                    path,
+                    File(context.filesDir, path)
+                ).get()
+            }
+        WhisperInferrer(modelFile, inferenceContext)
+    }
+
+    val modelBaseEnFirebaseCS: WhisperInferrer by lazy {
+        val path = "ml/whisper-2.0.0/whisper-base.en/whisper.tflite"
+        val modelFile: File =
+            runBlocking {
+                FirebaseBlob(
+                    path,
+                    File(context.filesDir, path)
+                ).get()
+            }
+        WhisperInferrer(modelFile, inferenceContext)
+    }
+
+    val modelBaseArFirebaseCS: WhisperInferrer by lazy {
+        val path = "ml/whisper-2.0.0/whisper-base.ar/whisper.tflite"
+        val modelFile: File =
+            runBlocking {
+                FirebaseBlob(
+                    path,
+                    File(context.filesDir, path)
+                ).get()
+            }
+        WhisperInferrer(modelFile, inferenceContext)
     }
 
     val modelBaseAr: WhisperInferrer by lazy {
-        WhisperInferrer(context, "ml/whisper-base-ar.tflite")
+        WhisperInferrer(context, "ml/whisper-base-ar.tflite", inferenceContext)
     }
 
     val modelBaseEn: WhisperInferrer by lazy {
         val modelFile: File
-        WhisperInferrer(context, "ml/whisper-base-en.tflite")
+        WhisperInferrer(context, "ml/whisper-base-en.tflite", inferenceContext)
     }
 
     val tokenizer: WhisperTokenizer by lazy {

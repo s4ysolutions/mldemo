@@ -1,16 +1,19 @@
 package solutions.s4y.mldemo.asr.service.accumulator
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 // TODO: this should be an operator
-class GrowingAccumulator() {
+class GrowingAccumulator {
     private var sequenceBuffer: FloatArray = FloatArray(0)
     private val lock: Mutex = Mutex()
 
-    suspend fun reset() = lock.withLock {
-        if (sequenceBuffer.isNotEmpty())
-            sequenceBuffer = FloatArray(0)
+    fun reset() = runBlocking {
+        lock.withLock {
+            if (sequenceBuffer.isNotEmpty())
+                sequenceBuffer = FloatArray(0)
+        }
     }
 
     suspend fun growAccumulator(waveForms: FloatArray) = lock.withLock {
@@ -20,5 +23,9 @@ class GrowingAccumulator() {
         sequenceBuffer = newBuffer
         newBuffer
     }
+
+    suspend fun duration(): Int = lock.withLock { sequenceBuffer.size } / 16000
+
+    suspend fun waveForms(): FloatArray = lock.withLock { sequenceBuffer }
 }
 
