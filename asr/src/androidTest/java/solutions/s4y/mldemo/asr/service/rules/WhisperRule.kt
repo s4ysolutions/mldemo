@@ -125,6 +125,30 @@ class WhisperRule : MethodRule {
         WhisperInferrer(context, "ml/whisper-base-en.tflite", inferenceContext)
     }
 
+    val modelTiny: WhisperInferrer by lazy {
+        val path = "/ml/sergenes/whisper-tiny/whisper.tflite"
+        val modelFile: File =
+            runBlocking {
+                FirebaseBlob(
+                    path,
+                    File(context.filesDir, path)
+                ).get()
+            }
+        WhisperInferrer(modelFile, inferenceContext)
+    }
+
+    val modelTinyEn: WhisperInferrer by lazy {
+        val path = "/ml/sergenes/whisper-tiny/whisper.tflite"
+        val modelFile: File =
+            runBlocking {
+                FirebaseBlob(
+                    path,
+                    File(context.filesDir, path)
+                ).get()
+            }
+        WhisperInferrer(modelFile, inferenceContext)
+    }
+
     val tokenizer: WhisperTokenizer by lazy {
         val tokenizerFile: File
         runBlocking {

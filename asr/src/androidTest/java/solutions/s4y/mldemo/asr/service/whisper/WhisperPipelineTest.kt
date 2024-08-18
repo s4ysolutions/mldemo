@@ -33,6 +33,40 @@ class WhisperPipelineTest {
             assertEquals(whisper.testTranscriptionAr11, decoded)
         }
 
+        @Test
+        fun decodeWaveForm_shouldDecodeEnglish_whenTinyModel(): Unit = runBlocking {
+            // Arrange
+            val provider = WhisperPipeline(
+                whisper.waveFormsAccumulator.flow,
+                whisper.whisperTFLogMel,
+                whisper.modelTiny,
+                whisper.tokenizer,
+            )
+            // Act
+            val decoded = provider.decodeWaveForms(whisper.testWaveFormsEn)
+            // Assert
+            // assertEquals(whisper.testTranscriptionAr11WithError, decoded)
+            // works on real device
+            assertEquals(whisper.testTranscriptionAr11, decoded)
+        }
+
+        @Test
+        fun decodeWaveForm_shouldDecodeEnglish_whenTinyEnEnModel(): Unit = runBlocking {
+            // Arrange
+            val provider = WhisperPipeline(
+                whisper.waveFormsAccumulator.flow,
+                whisper.whisperTFLogMel,
+                whisper.modelTiny,
+                whisper.tokenizer,
+            )
+            // Act
+            val decoded = provider.decodeWaveForms(whisper.testWaveFormsEn)
+            // Assert
+            // assertEquals(whisper.testTranscriptionAr11WithError, decoded)
+            // works on real device
+            assertEquals(whisper.testTranscriptionAr11, decoded)
+        }
+
     }
     /*
     @get:Rule

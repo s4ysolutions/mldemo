@@ -5,6 +5,7 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -16,6 +17,7 @@ import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.gpu.GpuDelegate
 import org.tensorflow.lite.gpu.GpuDelegateFactory
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import solutions.s4y.mldemo.asr.service.whisper.WhisperPipeline.Companion
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -58,13 +60,17 @@ class WhisperInferrer(
                 Log.d(TAG, "GPU delegate is supported")
                 val delegateOptions =
                     compatList.bestOptionsForThisDevice
+                // does not give any performance improvement
+                // delegateOptions.setForceBackend(GpuDelegateFactory.Options.GpuBackend.OPENGL)
                 // must be run in the same thread as runInference
                 val gpuDelegate = GpuDelegate(delegateOptions)
                 options.addDelegate(gpuDelegate)
             } else {
                 Log.d(TAG, "GPU delegate is not supported")
             }
-            options.setNumThreads(Runtime.getRuntime().availableProcessors())
+            val n  = Runtime.getRuntime().availableProcessors()
+            Log.d(TAG, "Set Number of threads: $n")
+            options.setNumThreads(n)
             var tryInterpreter: InterpreterApi
             try {
                 Log.d(TAG, "Create interpreter...")
@@ -75,7 +81,7 @@ class WhisperInferrer(
                     "Failed to create interpreter with GPU delegate, falling back to CPU..."
                 )
                 val optionsFallback = InterpreterApi.Options()
-                optionsFallback.setNumThreads(Runtime.getRuntime().availableProcessors())
+                optionsFallback.setNumThreads(n)
                 tryInterpreter = InterpreterApi.create(byteBuffer, optionsFallback)
             }
             Log.d(TAG, "Interpreter created")
@@ -90,48 +96,50 @@ class WhisperInferrer(
      * @param inputData Flattened [1, 80, 3000] FloatArray of 1 batch x 80 mel bins x 3000 frames
      * @return The list of tokens
      */
-    suspend fun runInference(inputData: FloatArray): Deferred<IntArray> =
+    suspend fun runInference(inputData: FloatArray): IntArray? =
         withContext(inferenceContext) {
-            async {
-                assert(Thread.currentThread().id == inferrerThreadId) {
-                    "runInference must be run in the same thread as the delegate was added"
-                }
-                Log.d(TAG, "Run inference in thread id: ${Thread.currentThread().id}")
-                // Create input tensor
-                val inputTensor = interpreter.getInputTensor(0)
-                val inputBuffer =
-                    TensorBuffer.createFixedSize(inputTensor.shape(), inputTensor.dataType())
-
-                // Load input data
-                val inputSize =
-                    inputTensor.shape()[0] * inputTensor.shape()[1] * inputTensor.shape()[2] * 4 //java.lang.Float.BYTES
-                val inputBuf = ByteBuffer.allocateDirect(inputSize)
-                inputBuf.order(ByteOrder.nativeOrder())
-                for (input in inputData) {
-                    inputBuf.putFloat(input)
-                }
-                inputBuffer.loadBuffer(inputBuf)
-
-                // Create output tensor
-                val outputTensor = interpreter.getOutputTensor(0)
-                val outputBuffer =
-                    TensorBuffer.createFixedSize(outputTensor.shape(), DataType.FLOAT32)
-
-                // Run inference
-                interpreter.run(inputBuffer.buffer, outputBuffer.buffer)
-
-                // Retrieve the results
-                val outputLen = outputBuffer.intArray.size
-                val result = IntArray(outputLen)
-                // val time = System.currentTimeMillis()
-                for (i in 0 until outputLen) {
-                    val token = outputBuffer.buffer.getInt()
-                    result[i] = token
-                }
-                // should be monitored
-                // (System.currentTimeMillis() - time).toString())
-                result
+            if (!coroutineContext.isActive) return@withContext null
+            assert(Thread.currentThread().id == inferrerThreadId) {
+                "runInference must be run in the same thread as the delegate was added"
             }
+            // Create input tensor
+            val inputTensor = interpreter.getInputTensor(0)
+            val inputBuffer =
+                TensorBuffer.createFixedSize(inputTensor.shape(), inputTensor.dataType())
+
+            // Load input data
+            val inputSize =
+                inputTensor.shape()[0] * inputTensor.shape()[1] * inputTensor.shape()[2] * 4 //java.lang.Float.BYTES
+            val inputBuf = ByteBuffer.allocateDirect(inputSize)
+            inputBuf.order(ByteOrder.nativeOrder())
+            for (input in inputData) {
+                inputBuf.putFloat(input)
+            }
+            inputBuffer.loadBuffer(inputBuf)
+
+            // Create output tensor
+            val outputTensor = interpreter.getOutputTensor(0)
+            val outputBuffer =
+                TensorBuffer.createFixedSize(outputTensor.shape(), DataType.FLOAT32)
+
+            if (!coroutineContext.isActive) return@withContext null
+            // Run inference
+            Log.d(TAG, "Run inference (decode) start")
+            val ts = System.currentTimeMillis()
+            interpreter.run(inputBuffer.buffer, outputBuffer.buffer)
+            Log.d(TAG, "Run inference (decode) done in ${System.currentTimeMillis() - ts} ms")
+
+            // Retrieve the results
+            val outputLen = outputBuffer.intArray.size
+            val result = IntArray(outputLen)
+            // val time = System.currentTimeMillis()
+            for (i in 0 until outputLen) {
+                val token = outputBuffer.buffer.getInt()
+                result[i] = token
+            }
+            // should be monitored
+            // (System.currentTimeMillis() - time).toString())
+            result
         }
 
     companion object {

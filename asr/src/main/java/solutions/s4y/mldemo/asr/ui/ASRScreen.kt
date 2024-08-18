@@ -13,7 +13,7 @@ import solutions.s4y.mldemo.asr.viewmodels.ASRViewModel
 
 @Composable
 fun VoiceTranscriptionScreen(viewModel: ASRViewModel = hiltViewModel()) {
-    val last = viewModel.asrService.flow.collectAsState("Listen ...").value
+    val last = viewModel.asrService.flow.collectAsState("").value
     Text(
         text = last,
         fontSize = 16.sp,

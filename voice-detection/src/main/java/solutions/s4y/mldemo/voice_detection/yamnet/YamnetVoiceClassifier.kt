@@ -120,36 +120,34 @@ class YamnetVoiceClassifier(
             )
     }
 
-    private suspend fun waveForms2Probabilities(waveForms: FloatArray): Deferred<FloatArray> =
+    private suspend fun waveForms2Probabilities(waveForms: FloatArray): FloatArray =
         withContext(inferenceContext) {
-            async(inferenceContext) {
-                assert(Thread.currentThread().id == inferrerThreadId) {
-                    "runInference must be run in the same thread as the delegate was added ($inferrerThreadId), but was ${Thread.currentThread()}(${Thread.currentThread().id})"
-                }
-                var _inputTensor = inputTensor
-                var _inputBuffer = inputBuffer
-                var _inputBuf = inputBuf
-                if (_inputTensor == null || _inputBuffer == null || _inputBuf == null || prevWaveFormsSize != waveForms.size) {
-                    _inputTensor = TensorAudio.create(format, waveForms.size)
-                    _inputBuffer = _inputTensor.tensorBuffer
-                    val inputSize = waveForms.size * java.lang.Float.BYTES
-                    _inputBuf = ByteBuffer.allocateDirect(inputSize)
-                    _inputBuf.order(ByteOrder.nativeOrder())
-                    inputTensor = _inputTensor
-                    inputBuffer = _inputBuffer
-                    inputBuf = _inputBuf
-                    prevWaveFormsSize = waveForms.size
-                }
-                _inputTensor!!.load(waveForms)
-                for (input in waveForms) {
-                    _inputBuf!!.putFloat(input)
-                }
-                _inputBuffer!!.loadBuffer(_inputBuf!!)
-
-                interpreter.run(_inputBuffer.buffer, outputBuffer0.buffer)
-                val probabilities = outputBuffer0.floatArray
-                probabilities
+            assert(Thread.currentThread().id == inferrerThreadId) {
+                "runInference must be run in the same thread as the delegate was added ($inferrerThreadId), but was ${Thread.currentThread()}(${Thread.currentThread().id})"
             }
+            var _inputTensor = inputTensor
+            var _inputBuffer = inputBuffer
+            var _inputBuf = inputBuf
+            if (_inputTensor == null || _inputBuffer == null || _inputBuf == null || prevWaveFormsSize != waveForms.size) {
+                _inputTensor = TensorAudio.create(format, waveForms.size)
+                _inputBuffer = _inputTensor.tensorBuffer
+                val inputSize = waveForms.size * java.lang.Float.BYTES
+                _inputBuf = ByteBuffer.allocateDirect(inputSize)
+                _inputBuf.order(ByteOrder.nativeOrder())
+                inputTensor = _inputTensor
+                inputBuffer = _inputBuffer
+                inputBuf = _inputBuf
+                prevWaveFormsSize = waveForms.size
+            }
+            _inputTensor!!.load(waveForms)
+            for (input in waveForms) {
+                _inputBuf!!.putFloat(input)
+            }
+            _inputBuffer!!.loadBuffer(_inputBuf!!)
+
+            interpreter.run(_inputBuffer.buffer, outputBuffer0.buffer)
+            val probabilities = outputBuffer0.floatArray
+            probabilities
         }
 
     // TODO: add synchronization of inferenceJob modification
@@ -161,15 +159,7 @@ class YamnetVoiceClassifier(
             if (waveForms.size != PCM_BATCH)
                 throw Exception("pcmFeed.batch must be 15600, see https://www.kaggle.com/models/google/yamnet/tfLite")
             flow {
-                val deferred = waveForms2Probabilities(waveForms)
-                val probabilitiesRaw: FloatArray
-                try {
-                    probabilitiesRaw = deferred.await()
-                } catch (e: CancellationException) {
-                    Log.w(TAG, "flow mapping cancelled $e")
-                    deferred.cancel()
-                    return@flow
-                }
+                val probabilitiesRaw = waveForms2Probabilities(waveForms)
                 decoder.add(probabilitiesRaw)
                 val probabilities =
                     IVoiceClassifier.Classes(decoder.classesDescended, waveForms)

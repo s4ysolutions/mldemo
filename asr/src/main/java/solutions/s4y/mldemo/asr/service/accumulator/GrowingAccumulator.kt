@@ -24,7 +24,11 @@ class GrowingAccumulator {
         newBuffer
     }
 
-    suspend fun duration(): Int = lock.withLock { sequenceBuffer.size } / 16000
+    suspend fun duration(): Int = lock.withLock {
+        (sequenceBuffer.size / 16000 + .5).toInt()
+    }
+
+    suspend fun isEmpty(): Boolean = lock.withLock { sequenceBuffer.isEmpty() }
 
     suspend fun waveForms(): FloatArray = lock.withLock { sequenceBuffer }
 }

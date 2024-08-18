@@ -19,9 +19,6 @@ class WhisperInferrerTest {
         @get:Rule
         val whisper = WhisperRule()
 
-        /**
-         * Do not use rule because this test ensures that the rule should work
-         */
         @Test
         fun constructor_shouldWork_WhenFile(): Unit = runBlocking {
             // Act
@@ -85,6 +82,22 @@ class WhisperInferrerTest {
         fun constructor_shouldWork_WhenBaseEnGCS(): Unit = runBlocking {
             // Arrange && Act && Assert
             println(whisper.modelBaseEnFirebaseCS.toString())
+            // Assert
+            // no exception
+        }
+
+        @Test
+        fun constructor_shouldWork_WhenTinyGCS(): Unit = runBlocking {
+            // Arrange && Act && Assert
+            println(whisper.modelTiny.toString())
+            // Assert
+            // no exception
+        }
+
+        @Test
+        fun constructor_shouldWork_WhenTinyEnEnGCS(): Unit = runBlocking {
+            // Arrange && Act && Assert
+            println(whisper.modelTinyEn.toString())
             // Assert
             // no exception
         }

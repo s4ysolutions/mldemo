@@ -3,12 +3,13 @@ package solutions.s4y.mldemo.asr.ui
 import android.Manifest
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.filled.Downloading
+import androidx.compose.material.icons.filled.Agriculture
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PlayDisabled
+import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -20,8 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -43,34 +46,42 @@ fun ASRBottomBar() {
     val classifier = viewModel.classifier
 
     val asr = viewModel.asrService
-    val asrStatus = asr.flowState.collectAsState()
+    val asrVoice = asr.flowVoiceState.collectAsState()
     val modelReady = asr.flowModelReady.collectAsState()
+    val isDecoding = asr.flowIsDecoding.collectAsState()
 
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
-    val model = "whisper-base.ar"
+    // val model = "whisper-base.ar"
+    // val model = "whisper-2.0.0/whisper-tiny.en.en"
+    val model = "sergenes/whisper-tiny"
+    //val model = "sergenes/whisper-tiny.en"
 
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        asr.loadModel(context, "ml/whisper-2.0.0/$model/whisper.tflite")
+        asr.loadModelFromGCS(context, "ml/$model/whisper.tflite")
     }
 
     BottomAppBar(
         actions = {
             Row {
-                val asrState = asrStatus.value
+                val asrState = asrVoice.value
                 val asrColor = when (asrState) {
                     ASRService.State.IDLE -> Color.Gray
-                    ASRService.State.NON_SPEECH -> Color.Green
-                    ASRService.State.SPEECH -> Color.Red
+                    ASRService.State.NON_SPEECH -> Color.Black
+                    ASRService.State.SPEECH -> Color.Green
                 }
-                Icon(Icons.Filled.Circle, tint = asrColor, contentDescription = "ASR state")
+                Icon(Icons.Filled.Mic, tint = asrColor, contentDescription = "ASR state")
+
+                val isDecodingColor = if (isDecoding.value) Color.Red else Color.Transparent
+                Icon(Icons.Filled.Agriculture, tint = isDecodingColor, contentDescription = "Decoding")
+
                 if (modelReady.value) {
                     //Icon(Icons.Filled.Check, contentDescription = "Model ready")
-                    Text(model)
+                    Text(model, Modifier.padding(start = 8.dp))
                 }else {
                     // Icon(Icons.Filled.Downloading, contentDescription = "Model is not ready yet")
-                    Text("$model (loading)")
+                    Text("$model (load)")
                 }
             }
         },
