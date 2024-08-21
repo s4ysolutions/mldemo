@@ -2,7 +2,6 @@ package solutions.s4y.mldemo.asr.service
 
 import android.content.Context
 import android.util.Log
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,7 +18,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.newSingleThreadContext
 import solutions.s4y.audio.mel.IMelSpectrogram
-import solutions.s4y.firebase.FirebaseBlob
 import solutions.s4y.mldemo.asr.service.accumulator.GrowingAccumulator
 import solutions.s4y.mldemo.asr.service.whisper.WhisperInferrer
 import solutions.s4y.mldemo.asr.service.whisper.WhisperPipeline
@@ -27,15 +25,13 @@ import solutions.s4y.mldemo.asr.service.whisper.WhisperTFLogMel
 import solutions.s4y.mldemo.asr.service.whisper.WhisperTokenizer
 import solutions.s4y.mldemo.voice_detection.yamnet.IVoiceClassifier
 import java.io.Closeable
-import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ASRService @Inject constructor(@ApplicationContext context: Context) :
-    Closeable {
+class ASRService @Inject constructor() : Closeable {
     enum class State {
         IDLE,
         NON_SPEECH,
@@ -49,12 +45,6 @@ class ASRService @Inject constructor(@ApplicationContext context: Context) :
         private const val MAX_DURATION = 3 // force emit after this duration
     }
 
-    // It must be the single thread in order to make sure
-    // delegator and interpreter are in the same thread
-    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
-    private val whisperContext = newSingleThreadContext("inference_whisper")
-    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
-    private val melContext = newSingleThreadContext("inference_mel")
     private val _flow: MutableSharedFlow<String> =
         MutableSharedFlow(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val _flowState: MutableStateFlow<State> =
@@ -67,8 +57,6 @@ class ASRService @Inject constructor(@ApplicationContext context: Context) :
     private var jobAccumulator: Job? = null
     private var jobWhisper: Job? = null
     private var jobIsDecoding: Job? = null
-    private var localModelPath = File("")
-    private val melSpectrogram: IMelSpectrogram = WhisperTFLogMel(context, melContext)
     private val nonSpeechCount = AtomicInteger(0)
     private lateinit var tryEmitWaveForms: (FloatArray) -> Boolean
     private lateinit var closeWaveForms: () -> Unit
@@ -112,12 +100,14 @@ class ASRService @Inject constructor(@ApplicationContext context: Context) :
                     nonSpeechCount.set(0)
                     growingAccumulator.growAccumulator(it.waveForms)
                     _flowState.value = State.SPEECH
-                    Log.d(TAG, "Speech cls=$cls detected for ${growingAccumulator.duration()}s, emit = ${isMaxDuration()}")
+                    Log.d(
+                        TAG,
+                        "Speech cls=$cls detected for ${growingAccumulator.duration()}s, emit = ${isMaxDuration()}"
+                    )
                     // continued speech should not be transcribed immediately
                     // wait either for specific duration or for silence
                     if (isMaxDuration()) {
-                        val success = tryEmitWaveForms(growingAccumulator.waveForms())
-                        // Log.d(TAG, "emit waveforms: $success")
+                        tryEmitWaveForms(growingAccumulator.waveForms())
                     }
                     return@onEach
                 }
@@ -160,7 +150,7 @@ class ASRService @Inject constructor(@ApplicationContext context: Context) :
             .launchIn(feedingScope)
         jobWhisper = pipeline.flow
             .onEach {
-                val success =  _flow.tryEmit(it)
+                val success = _flow.tryEmit(it)
                 Log.d(TAG, "tryEmit($success): $it")
             }
             .launchIn(feedingScope)
@@ -171,16 +161,25 @@ class ASRService @Inject constructor(@ApplicationContext context: Context) :
             .launchIn(feedingScope)
     }
 
-    suspend fun loadModelFromGCS(context: Context, gcStoragePath: String) {
+    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
+    suspend fun loadPipelineFromGCS(context: Context, model: WhisperInferrer.Models) {
         stop()
-        localModelPath = File(context.filesDir, gcStoragePath)
         _flowModelReady.value = false
-        FirebaseBlob(gcStoragePath, localModelPath).get()
+
+        val melContext = newSingleThreadContext("inference_mel")
+        val melSpectrogram: IMelSpectrogram =
+            WhisperTFLogMel.loadFromGCS(context, melContext)
+
+        val whisperContext = newSingleThreadContext("inference_whisper")
+        val whisperInferrer = WhisperInferrer.loadFromGCS(model, context, whisperContext)
+
+        val tokenizer = WhisperTokenizer.loadFromGCS(context)
+
         val provider = WhisperPipeline(
             waveForms,
             melSpectrogram,
-            WhisperInferrer(localModelPath, whisperContext),
-            WhisperTokenizer(context),
+            whisperInferrer,
+            tokenizer
         )
         whisperPipeline.set(provider)
         _flowModelReady.value = true
@@ -199,7 +198,7 @@ class ASRService @Inject constructor(@ApplicationContext context: Context) :
         _flowState.value = State.IDLE
     }
 
-    suspend fun reset() {
+    fun reset() {
         growingAccumulator.reset()
     }
 }

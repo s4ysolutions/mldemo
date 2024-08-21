@@ -2,8 +2,6 @@ package solutions.s4y.mldemo.asr.service.whisper
 
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -11,29 +9,21 @@ import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.TensorFlowLite
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.gpu.GpuDelegateFactory
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import solutions.s4y.audio.mel.IMelSpectrogram
-import solutions.s4y.mldemo.asr.service.whisper.WhisperPipeline.Companion
-import java.io.FileInputStream
+import solutions.s4y.firebase.FirebaseBlob
+import solutions.s4y.mldemo.asr.service.gcs.gcsFeaturesExtractorPath
+import solutions.s4y.mldemo.asr.service.whisper.extensions.toByteBuffer
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.channels.FileChannel
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.min
 
 class WhisperTFLogMel(
-    context: Context,
-    assetModelPath: String,
-    private val inferenceContext: CoroutineContext
+    byteBuffer: ByteBuffer, private val inferenceContext: CoroutineContext
 ) :
     IMelSpectrogram {
-
-    constructor(context: Context, inferenceContext: CoroutineContext) : this(
-        context,
-        MODEL_PATH,
-        inferenceContext
-    )
 
     private var interpreter: InterpreterApi
     private var inputBuffer1: TensorBuffer
@@ -45,14 +35,6 @@ class WhisperTFLogMel(
         TensorFlowLite.init()
 
         runBlocking(inferenceContext) {
-            inferrerThreadId = Thread.currentThread().id
-            val assetFileDescriptor = context.assets.openFd(assetModelPath)
-            val fileInputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
-            val fileChannel = fileInputStream.channel
-            val startOffset = assetFileDescriptor.startOffset
-            val declaredLength = assetFileDescriptor.declaredLength
-            val modelFile =
-                fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
             inferrerThreadId = Thread.currentThread().id
             Log.d(TAG, "Create in thread id: $inferrerThreadId")
             val options = InterpreterApi.Options()
@@ -71,7 +53,7 @@ class WhisperTFLogMel(
             var tryInterpreter: InterpreterApi
             try {
                 Log.d(TAG, "Create interpreter...")
-                tryInterpreter = InterpreterApi.create(modelFile, options)
+                tryInterpreter = InterpreterApi.create(byteBuffer, options)
             } catch (e: IllegalArgumentException) {
                 Log.w(
                     TAG,
@@ -79,7 +61,7 @@ class WhisperTFLogMel(
                 )
                 val optionsFallback = InterpreterApi.Options()
                 optionsFallback.setNumThreads(Runtime.getRuntime().availableProcessors())
-                tryInterpreter = InterpreterApi.create(modelFile, optionsFallback)
+                tryInterpreter = InterpreterApi.create(byteBuffer, optionsFallback)
             }
             Log.d(TAG, "Interpreter created")
             interpreter = tryInterpreter
@@ -129,6 +111,16 @@ class WhisperTFLogMel(
 
     companion object {
         private const val TAG = "WhisperTFLogMel"
-        private const val MODEL_PATH = "features-extractor.tflite"
+
+        suspend fun loadFromGCS(
+            context: Context,
+            coroutineContext: CoroutineContext
+        ): WhisperTFLogMel {
+            val gcsPath = gcsFeaturesExtractorPath()
+            val localFile = File(context.filesDir, gcsPath)
+            FirebaseBlob(gcsPath, localFile).get()
+            val byteBuffer = localFile.toByteBuffer()
+            return WhisperTFLogMel(byteBuffer, coroutineContext)
+        }
     }
 }

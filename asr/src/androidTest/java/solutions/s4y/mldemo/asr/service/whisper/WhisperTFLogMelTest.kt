@@ -14,10 +14,9 @@ class WhisperTFLogMelTest {
     @Test
     fun getMelSpectrogram_shouldReturn3000frames80bins_whenArabic() = runBlocking {
         // Arrange
-        val logMelSpectrogram =
-            WhisperTFLogMel(whisper.context, "features-extractor.tflite", whisper.inferenceContext)
+        val logMelSpectrogram = whisper.assetWhisperTFLogMel
         // Act
-        val result = logMelSpectrogram.getMelSpectrogram(whisper.testWaveFormsAr11).await()
+        val result = logMelSpectrogram.getMelSpectrogram(whisper.testWaveFormsAr11)!!
         // Assert
         // TODO: currently it almost useless
         //       just make sure it doesn't crash

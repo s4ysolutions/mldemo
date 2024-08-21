@@ -9,7 +9,6 @@ import androidx.compose.material.icons.filled.Agriculture
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PlayDisabled
-import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -31,6 +30,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import solutions.s4y.audio.AudioService
 import solutions.s4y.mldemo.asr.service.ASRService
+import solutions.s4y.mldemo.asr.service.whisper.WhisperInferrer
 import solutions.s4y.mldemo.asr.viewmodels.ASRViewModel
 
 @SuppressLint("MissingPermission")
@@ -52,14 +52,11 @@ fun ASRBottomBar() {
 
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
-    // val model = "whisper-base.ar"
-    // val model = "whisper-2.0.0/whisper-tiny.en.en"
-    val model = "sergenes/whisper-tiny"
-    //val model = "sergenes/whisper-tiny.en"
+    val model = WhisperInferrer.Models.Sergenes
 
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        asr.loadModelFromGCS(context, "ml/$model/whisper.tflite")
+        asr.loadPipelineFromGCS(context, model)
     }
 
     BottomAppBar(
@@ -73,13 +70,18 @@ fun ASRBottomBar() {
                 }
                 Icon(Icons.Filled.Mic, tint = asrColor, contentDescription = "ASR state")
 
-                val isDecodingColor = if (isDecoding.value) Color.Red else Color.Transparent
-                Icon(Icons.Filled.Agriculture, tint = isDecodingColor, contentDescription = "Decoding")
+                val isDecodingColor =
+                    if (isDecoding.value && asrState != ASRService.State.IDLE) Color.Red else Color.Transparent
+                Icon(
+                    Icons.Filled.Agriculture,
+                    tint = isDecodingColor,
+                    contentDescription = "Decoding"
+                )
 
                 if (modelReady.value) {
                     //Icon(Icons.Filled.Check, contentDescription = "Model ready")
-                    Text(model, Modifier.padding(start = 8.dp))
-                }else {
+                    Text(model.toString(), Modifier.padding(start = 8.dp))
+                } else {
                     // Icon(Icons.Filled.Downloading, contentDescription = "Model is not ready yet")
                     Text("$model (load)")
                 }

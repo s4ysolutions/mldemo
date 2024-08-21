@@ -2,23 +2,14 @@ package solutions.s4y.mldemo.asr.service.whisper
 
 import android.content.Context
 import com.google.gson.Gson
+import solutions.s4y.firebase.FirebaseBlob
+import solutions.s4y.mldemo.asr.service.gcs.gcsFeaturesExtractorPath
+import solutions.s4y.mldemo.asr.service.gcs.gcsTokenizerPath
 import solutions.s4y.mldemo.asr.service.whisper.tokenizer.json.TokenizerJSON
 import java.io.File
 import java.io.InputStreamReader
 
-class WhisperTokenizer(jsonString: String) {
-    constructor(context: Context) : this(context, JSON_PATH)
-    constructor(context: Context, assetPath: String) : this(
-        InputStreamReader(
-            context.assets.open(
-                assetPath
-            )
-        )
-    )
-
-    constructor(jsonFile: File) : this(InputStreamReader(jsonFile.inputStream()))
-    private constructor(jsonStream: InputStreamReader) : this(jsonStream.use { it.readText() })
-
+class WhisperTokenizer private constructor(jsonString: String) {
     private val specialTokens: Map<Int, String>
     private val unicodeTokens: Map<Int, String>
 
@@ -49,7 +40,7 @@ class WhisperTokenizer(jsonString: String) {
         specialTokens = mutableMapOf()
         unicodeTokens = mutableMapOf()
         tokenizerJson.addedTokens
-            .forEach { it ->
+            .forEach {
                 if (it.special) {
                     specialTokens[it.id] = it.content
                 } else {
@@ -67,7 +58,6 @@ class WhisperTokenizer(jsonString: String) {
         tokens: IntArray,
         skipSpecial: Boolean = true,
         compactSameSpecialTokens: Boolean = true,
-        space: String = " "
     ): String {
         val text = StringBuilder()
         val currentSubText = StringBuilder()
@@ -102,6 +92,14 @@ class WhisperTokenizer(jsonString: String) {
     }
 
     companion object {
-        private const val JSON_PATH = "tokenizer.json"
+        //private const val JSON_PATH = "tokenizer.json"
+        suspend fun loadFromGCS( context: Context): WhisperTokenizer {
+            val gcsPath = gcsTokenizerPath()
+            val jsonFile = File(context.filesDir, gcsPath)
+            FirebaseBlob(gcsPath, jsonFile).get()
+            InputStreamReader(jsonFile.inputStream()).use {
+                return WhisperTokenizer(it.readText())
+            }
+        }
     }
 }

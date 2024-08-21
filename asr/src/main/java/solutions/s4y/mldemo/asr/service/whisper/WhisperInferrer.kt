@@ -2,11 +2,7 @@ package solutions.s4y.mldemo.asr.service.whisper
 
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.tensorflow.lite.DataType
@@ -15,16 +11,18 @@ import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.TensorFlowLite
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.gpu.GpuDelegateFactory
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import solutions.s4y.mldemo.asr.service.whisper.WhisperPipeline.Companion
+import solutions.s4y.firebase.FirebaseBlob
+import solutions.s4y.mldemo.asr.service.gcs.gcsHuggingfaceWhisperModelPath
+import solutions.s4y.mldemo.asr.service.gcs.gcsSergenesWhisperModelPath
+import solutions.s4y.mldemo.asr.service.whisper.extensions.toByteBuffer
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import kotlin.coroutines.CoroutineContext
 
-class WhisperInferrer(
+class WhisperInferrer private constructor(
     byteBuffer: ByteBuffer, private val inferenceContext: CoroutineContext
 ) {
     constructor(file: File, inferenceContext: CoroutineContext) : this(
@@ -32,20 +30,30 @@ class WhisperInferrer(
         inferenceContext
     )
 
-    constructor(
-        context: Context,
-        assetModelPath: String,
-        inferenceContext: CoroutineContext
-    ) : this(
-        loadModelAssetFile(
-            context,
-            assetModelPath
-        ),
-        inferenceContext
-    )
+    enum class Models {
+        HuggingfaceTinyAr,
+        HuggingfaceTinyEn,
+        HuggingfaceBaseAr,
+        HuggingfaceBaseEn,
+        SergenesEn,
+        Sergenes
+    }
 
+    /*
+        constructor(
+            context: Context,
+            assetModelPath: String,
+            inferenceContext: CoroutineContext
+        ) : this(
+            loadModelAssetFile(
+                context,
+                assetModelPath
+            ),
+            inferenceContext
+        )
+    */
     private var inferrerThreadId: Long = -1
-    private lateinit var interpreter: InterpreterApi
+    private var interpreter: InterpreterApi
 
     init {
         Log.d(TAG, "Init TensorFlowLite")
@@ -68,7 +76,7 @@ class WhisperInferrer(
             } else {
                 Log.d(TAG, "GPU delegate is not supported")
             }
-            val n  = Runtime.getRuntime().availableProcessors()
+            val n = Runtime.getRuntime().availableProcessors()
             Log.d(TAG, "Set Number of threads: $n")
             options.setNumThreads(n)
             var tryInterpreter: InterpreterApi
@@ -156,16 +164,24 @@ class WhisperInferrer(
                 }
         }
 
-        private fun loadModelAssetFile(context: Context, assetModelPath: String): ByteBuffer {
-            val assetFileDescriptor = context.assets.openFd(assetModelPath)
-            val fileInputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
-            val fileChannel = fileInputStream.channel
-            val startOffset = assetFileDescriptor.startOffset
-            val declaredLength = assetFileDescriptor.declaredLength
-            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
-                .apply {
-                    order(ByteOrder.nativeOrder())
-                }
+
+        suspend fun loadFromGCS(
+            model: Models,
+            context: Context,
+            coroutineContext: CoroutineContext
+        ): WhisperInferrer {
+            val gcsPath = when (model) {
+                Models.HuggingfaceTinyAr -> gcsHuggingfaceWhisperModelPath("openai", "tiny", "ar")
+                Models.HuggingfaceTinyEn -> gcsHuggingfaceWhisperModelPath("openai", "tiny", "en")
+                Models.HuggingfaceBaseAr -> gcsHuggingfaceWhisperModelPath("openai", "base", "ar")
+                Models.HuggingfaceBaseEn -> gcsHuggingfaceWhisperModelPath("openai", "base", "en")
+                Models.Sergenes -> gcsSergenesWhisperModelPath()
+                Models.SergenesEn -> gcsSergenesWhisperModelPath("en")
+            }
+            val localFile = File(context.filesDir, gcsPath)
+            FirebaseBlob(gcsPath, localFile).get()
+            val byteBuffer = localFile.toByteBuffer()
+            return WhisperInferrer(byteBuffer, coroutineContext)
         }
     }
 }
