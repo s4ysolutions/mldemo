@@ -10,15 +10,20 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.rules.MethodRule
 import org.junit.runners.model.FrameworkMethod
 import org.junit.runners.model.Statement
 import solutions.s4y.mldemo.googleServicesOptionsBuilder
 import solutions.s4y.audio.mel.IMelSpectrogram
 import solutions.s4y.audio.pcm.PCMAssetWavProvider
-import solutions.s4y.mldemo.asr.service.whisper.DecoderEncoder
+import solutions.s4y.mldemo.asr.service.gcs.gcsEncoderDecoderPath
+import solutions.s4y.mldemo.asr.service.gcs.gcsFeaturesExtractorPath
+import solutions.s4y.mldemo.asr.service.whisper.EncoderDecoder
 import solutions.s4y.mldemo.asr.service.logmel.TFLiteLogMel
 import solutions.s4y.mldemo.asr.service.whisper.WhisperTokenizer
+import solutions.s4y.tflite.TfLiteStandaloneFactory
+import solutions.s4y.tflite.base.TfLiteFactory
 import java.io.InputStreamReader
 
 class WhisperRule : MethodRule {
@@ -81,84 +86,110 @@ class WhisperRule : MethodRule {
         return melData.flatten().flatten().toFloatArray()
     }
 
-    lateinit var context: Context
+    private lateinit var context: Context
 
     @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
     val inferenceContext = newSingleThreadContext("YamnetVoiceClassifierTest")
 
-    val waveFormsAccumulator: WaveFormsAccumulatorFlow by lazy {
-        WaveFormsAccumulatorFlow()
-    }
+    /*
+        val waveFormsAccumulator: WaveFormsAccumulatorFlow by lazy {
+            WaveFormsAccumulatorFlow()
+        }
 
-    val pcmFeed: PCMFeed by lazy {
-        PCMFeed()
+        val pcmFeed: PCMFeed by lazy {
+            PCMFeed()
+        }
+    */
+    private val tfLiteFactory: TfLiteFactory by lazy {
+        TfLiteStandaloneFactory()
     }
 
     val assetTFLiteLogMel: IMelSpectrogram by lazy {
         runBlocking {
-            TFLiteLogMel.loadFromGCS(
-                context,
-                inferenceContext
+            TFLiteLogMel(
+                tfLiteFactory.createInterpreterFromGCS(
+                    context,
+                    gcsFeaturesExtractorPath(),
+                    "test-logmel"
+                )
             )
         }
     }
 
-    val gcsHuggingfaceTinyEn: DecoderEncoder by lazy {
+    val gcsHuggingfaceTinyEn: EncoderDecoder by lazy {
         runBlocking {
-            DecoderEncoder.loadFromGCS(
-                DecoderEncoder.Models.HuggingfaceTinyEn,
-                context,
-                inferenceContext
+            EncoderDecoder(
+                tfLiteFactory.createInterpreterFromGCS(
+                    context, gcsEncoderDecoderPath(
+                        EncoderDecoder.Models.HuggingfaceTinyEn,
+                    ),
+                    "test-huggingface-tiny-en"
+                )
             )
         }
     }
 
-    val gcsHuggingfaceTinyAr: DecoderEncoder by lazy {
+    val gcsHuggingfaceTinyAr: EncoderDecoder by lazy {
         runBlocking {
-            DecoderEncoder.loadFromGCS(
-                DecoderEncoder.Models.HuggingfaceTinyAr,
-                context,
-                inferenceContext
+            EncoderDecoder(
+                tfLiteFactory.createInterpreterFromGCS(
+                    context, gcsEncoderDecoderPath(
+                        EncoderDecoder.Models.HuggingfaceTinyAr,
+                    ),
+                    "test-huggingface-tiny-ar"
+                )
             )
         }
     }
 
-    val gcsHuggingfaceBaseEn: DecoderEncoder by lazy {
+    val gcsHuggingfaceBaseEn: EncoderDecoder by lazy {
         runBlocking {
-            DecoderEncoder.loadFromGCS(
-                DecoderEncoder.Models.HuggingfaceBaseEn,
-                context,
-                inferenceContext
+            EncoderDecoder(
+                tfLiteFactory.createInterpreterFromGCS(
+                    context, gcsEncoderDecoderPath(
+                        EncoderDecoder.Models.HuggingfaceBaseEn,
+                    ),
+                    "test-huggingface-base-en"
+                )
             )
         }
     }
 
-    val gcsHuggingfaceBaseAr: DecoderEncoder by lazy {
+    val gcsHuggingfaceBaseAr: EncoderDecoder by lazy {
         runBlocking {
-            DecoderEncoder.loadFromGCS(
-                DecoderEncoder.Models.HuggingfaceBaseAr,
-                context,
-                inferenceContext
+            EncoderDecoder(
+                tfLiteFactory.createInterpreterFromGCS(
+                    context, gcsEncoderDecoderPath(
+                        EncoderDecoder.Models.HuggingfaceBaseAr,
+                    ),
+                    "test-huggingface-base-ar"
+                )
             )
         }
     }
 
-    val gcsSergenesTiny: DecoderEncoder by lazy {
+    val gcsSergenesTiny: EncoderDecoder by lazy {
         runBlocking {
-            DecoderEncoder.loadFromGCS(
-                DecoderEncoder.Models.Sergenes,
-                context,
-                inferenceContext
+            EncoderDecoder(
+                tfLiteFactory.createInterpreterFromGCS(
+                    context, gcsEncoderDecoderPath(
+                        EncoderDecoder.Models.Sergenes,
+                    ),
+                    "test-sergenes-tiny"
+                )
             )
         }
     }
 
-    val gcsSergenesTinyEn: DecoderEncoder by lazy {
+    val gcsSergenesTinyEn: EncoderDecoder by lazy {
         runBlocking {
-            DecoderEncoder.loadFromGCS(
-                DecoderEncoder.Models.SergenesEn,
-                context,
-                inferenceContext
+            EncoderDecoder(
+                tfLiteFactory.createInterpreterFromGCS(
+                    context, gcsEncoderDecoderPath(
+                        EncoderDecoder.Models.SergenesEn,
+                    ),
+                    "test-sergenes-tiny-en"
+                )
             )
         }
     }
@@ -217,7 +248,7 @@ class WhisperRule : MethodRule {
     }
 
     val testTranscriptionEn: String by lazy {
-        " Paint the sockets in the wall"
+        " Paint the sockets in the wall dull green. The child crawled into the dense grass. Bribes fail where honest men work. Trample the spark, else the flames will spread. The hilt of the sword was carved with fine designs. A round hole was drilled through the thin board. Footprints showed the path he took up the beach."
     }
 
     val testTranscriptionAr11WithError: String by lazy {

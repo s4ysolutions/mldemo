@@ -2,10 +2,9 @@ package solutions.s4y.mldemo.asr.service.whisper
 
 import android.content.Context
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import solutions.s4y.firebase.FirebaseBlob
-import solutions.s4y.mldemo.asr.service.gcs.gcsFeaturesExtractorPath
 import solutions.s4y.mldemo.asr.service.gcs.gcsTokenizerPath
-import solutions.s4y.mldemo.asr.service.whisper.tokenizer.json.TokenizerJSON
 import java.io.File
 import java.io.InputStreamReader
 
@@ -93,7 +92,7 @@ class WhisperTokenizer private constructor(jsonString: String) {
 
     companion object {
         //private const val JSON_PATH = "tokenizer.json"
-        suspend fun loadFromGCS( context: Context): WhisperTokenizer {
+        suspend fun loadFromGCS(context: Context): WhisperTokenizer {
             val gcsPath = gcsTokenizerPath()
             val jsonFile = File(context.filesDir, gcsPath)
             FirebaseBlob(gcsPath, jsonFile).get()
@@ -101,5 +100,29 @@ class WhisperTokenizer private constructor(jsonString: String) {
                 return WhisperTokenizer(it.readText())
             }
         }
+    }
+
+    class TokenizerJSON {
+        data class AddedToken(
+            @SerializedName("id") val id: Int,
+            @SerializedName("content") val content: String,
+            @SerializedName("single_word") val singleWord: Boolean,
+            @SerializedName("lstrip") val lstrip: Boolean,
+            @SerializedName("rstrip") val rstrip: Boolean,
+            @SerializedName("normalized") val normalized: Boolean,
+            @SerializedName("special") val special: Boolean
+        )
+
+        data class Model(
+            @SerializedName("vocab") val vocab: Map<String, Int>,
+        )
+
+        data class Tokenizer(
+            @SerializedName("version") val version: String,
+            @SerializedName("truncation") val truncation: String?,
+            @SerializedName("padding") val padding: String?,
+            @SerializedName("added_tokens") val addedTokens: List<AddedToken>,
+            @SerializedName("model") val model: Model,
+        )
     }
 }

@@ -16,7 +16,7 @@ class TFLiteLogMelTest {
         // Arrange
         val logMelSpectrogram = whisper.assetTFLiteLogMel
         // Act
-        val result = logMelSpectrogram.getMelSpectrogram(whisper.testWaveFormsAr11)!!
+        val result = logMelSpectrogram.getMelSpectrogram(whisper.testWaveFormsAr11)
         // Assert
         // TODO: currently it almost useless
         //       just make sure it doesn't crash

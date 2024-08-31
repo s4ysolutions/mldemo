@@ -11,9 +11,12 @@ import org.tensorflow.lite.gpu.GpuDelegateFactory
 import solutions.s4y.tflite.base.TfLiteFactory
 import solutions.s4y.tflite.base.TfLiteInterpreter
 import java.nio.ByteBuffer
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
 
-class TfLiteStandaloneFactory(): TfLiteFactory() {
+@Singleton
+class TfLiteStandaloneFactory @Inject constructor(): TfLiteFactory() {
     override suspend fun initialize(context: Context) {
         Log.d(TAG, "initialize TensorFlowLite")
         TensorFlowLite.init()

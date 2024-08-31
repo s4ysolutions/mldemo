@@ -3,9 +3,12 @@ package solutions.s4y.tflite.base
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
+import solutions.s4y.firebase.FirebaseBlob
 import java.io.Closeable
+import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
@@ -69,6 +72,22 @@ abstract class TfLiteFactory : Closeable {
         val startOffset: Long = assetFileDescriptor.startOffset
         val declaredLength: Long = assetFileDescriptor.getDeclaredLength()
         val buffer = fileInputStream.mappedByteBuffer(startOffset, declaredLength)
+        return createInterpreter(context, buffer, name)
+    }
+
+    suspend fun createInterpreterFromGCS(
+        context: Context,
+        gcsPath: String,
+        name: String
+    ): TfLiteInterpreter {
+        val localFile = File(context.filesDir, gcsPath)
+        Log.d(TAG, "Load model from GCS: $gcsPath")
+        Log.d(TAG, "Load model to local path: ${localFile.absolutePath}")
+        FirebaseBlob(gcsPath, localFile).get()
+        val (fileInputStream, size) = withContext(Dispatchers.IO) {
+            FileInputStream(localFile) to localFile.length()
+        }
+        val buffer = fileInputStream.mappedByteBuffer(0, size)
         return createInterpreter(context, buffer, name)
     }
 

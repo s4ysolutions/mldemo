@@ -2,12 +2,11 @@ package solutions.s4y.tflite.base
 
 import kotlinx.coroutines.withContext
 import org.tensorflow.lite.DataType
-import org.tensorflow.lite.InterpreterApi
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.Closeable
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.min
 
 abstract class TfLiteInterpreter(
     private val inferenceContext: CoroutineContext,
@@ -49,12 +48,22 @@ abstract class TfLiteInterpreter(
 
     protected abstract fun runInference(input: FloatArray)
 
+    abstract val lastInferenceDuration: Long
+
     suspend fun run(input: FloatArray) = withContext(inferenceContext) {
         assert(Thread.currentThread().id == createThreadId) {
             "TFLiteInterpreter should be used from the same thread it was created"
         }
         lastFloatOutput = null
         lastIntOutput = null
+        val buffer = inputBuffers[0].asFloatBuffer()
+        val size = min(buffer.capacity(), input.size)
+        for (i in 0..<size) {
+            buffer.put(input[i])
+        }
+        for (i in size until buffer.capacity()) {
+            buffer.put(0f)
+        }
         runInference(input)
     }
 

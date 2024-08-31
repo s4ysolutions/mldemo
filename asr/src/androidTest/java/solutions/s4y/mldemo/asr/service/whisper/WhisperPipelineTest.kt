@@ -6,11 +6,23 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.runners.Enclosed
 import org.junit.runner.RunWith
+import solutions.s4y.audio.mel.IMelSpectrogram
 import solutions.s4y.mldemo.asr.service.rules.WhisperRule
 
 
 @RunWith(Enclosed::class)
 class WhisperPipelineTest {
+    internal class WhisperPipeline(
+        private val logMelSpectrogram: IMelSpectrogram,
+        private val encoderDecoder: EncoderDecoder,
+        private val tokenizer: WhisperTokenizer,
+    ) {
+        suspend fun decodeWaveForms(waveForms: FloatArray): String {
+            val melSpectrogram = logMelSpectrogram.getMelSpectrogram(waveForms)
+            val tokens = encoderDecoder.transcribe(melSpectrogram)
+            return tokenizer.decode(tokens)
+        }
+    }
 
     class DecodeWaveFormsTest {
         @get:Rule
@@ -20,7 +32,6 @@ class WhisperPipelineTest {
         fun decodeWaveForm_shouldDecodeArabic_whenHuggingfaceBaseEn(): Unit = runBlocking {
             // Arrange
             val pipeline = WhisperPipeline(
-                whisper.waveFormsAccumulator.flow,
                 whisper.assetTFLiteLogMel,
                 whisper.gcsHuggingfaceBaseEn,
                 whisper.tokenizerHuggingface,
@@ -38,7 +49,6 @@ class WhisperPipelineTest {
         fun decodeWaveForm_shouldDecodeArabic_whenHuggingfaceBaseAr(): Unit = runBlocking {
             // Arrange
             val provider = WhisperPipeline(
-                whisper.waveFormsAccumulator.flow,
                 whisper.assetTFLiteLogMel,
                 whisper.gcsHuggingfaceBaseAr,
                 whisper.tokenizerHuggingface,
@@ -53,7 +63,6 @@ class WhisperPipelineTest {
         fun decodeWaveForm_shouldDecodeEnglish_whenHuggingfaceTinyEn(): Unit = runBlocking {
             // Arrange
             val provider = WhisperPipeline(
-                whisper.waveFormsAccumulator.flow,
                 whisper.assetTFLiteLogMel,
                 whisper.gcsHuggingfaceTinyEn,
                 whisper.tokenizerHuggingface,
@@ -68,7 +77,6 @@ class WhisperPipelineTest {
         fun decodeWaveForm_shouldDecodeEnglish_whenSergenesTiny(): Unit = runBlocking {
             // Arrange
             val provider = WhisperPipeline(
-                whisper.waveFormsAccumulator.flow,
                 whisper.assetTFLiteLogMel,
                 whisper.gcsSergenesTiny,
                 whisper.tokenizerHuggingface,
@@ -83,7 +91,6 @@ class WhisperPipelineTest {
         fun decodeWaveForm_shouldDecodeEnglish_whenSergenesEnEnModel(): Unit = runBlocking {
             // Arrange
             val provider = WhisperPipeline(
-                whisper.waveFormsAccumulator.flow,
                 whisper.assetTFLiteLogMel,
                 whisper.gcsSergenesTinyEn,
                 whisper.tokenizerHuggingface,

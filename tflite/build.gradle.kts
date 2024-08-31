@@ -45,7 +45,7 @@ tasks.withType<Test> {
 dependencies {
     kapt(libs.dagger.hilt.android.compiler)
 
-
+    implementation(project(":firebase"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.dagger.hilt.android)
     // implementation(libs.androidx.appcompat)

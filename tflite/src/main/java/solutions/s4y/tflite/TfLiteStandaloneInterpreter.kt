@@ -2,26 +2,20 @@ package solutions.s4y.tflite
 
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.InterpreterApi
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import solutions.s4y.tflite.base.TfLiteInterpreter
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.min
 
 class TfLiteStandaloneInterpreter(
     private val interpreter: InterpreterApi,
     inferenceContext: CoroutineContext,
     onClose: () -> Unit
 ) : TfLiteInterpreter(inferenceContext, inputs(interpreter), output(interpreter), onClose) {
+    override val lastInferenceDuration: Long
+        get() =
+            interpreter.lastNativeInferenceDurationNanoseconds / 1000
+
 
     override fun runInference(input: FloatArray) {
-        val buffer = inputBuffers[0].asFloatBuffer()
-        val size = min(buffer.capacity(), input.size)
-        for (i in 0..<size) {
-            buffer.put(input[i])
-        }
-        for (i in size until buffer.capacity()) {
-            buffer.put(0f)
-        }
         interpreter.run(inputBuffers[0], outputBuffer)
     }
 

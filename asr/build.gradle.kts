@@ -56,6 +56,7 @@ dependencies {
     implementation(project(":audio"))
     implementation(project(":firebase"))
     implementation(project(":voice-detection"))
+    implementation(project(":tflite"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

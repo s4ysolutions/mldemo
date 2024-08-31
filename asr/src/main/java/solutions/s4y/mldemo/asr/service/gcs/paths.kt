@@ -1,4 +1,8 @@
+@file:Suppress("SameParameterValue", "unused")
+
 package solutions.s4y.mldemo.asr.service.gcs
+
+import solutions.s4y.mldemo.asr.service.whisper.EncoderDecoder.Models
 
 private fun gcsPath(
     project: String,
@@ -71,5 +75,15 @@ fun gcsTokenizerPath(): String {
         "whisper",
         "tokenizer",
         "dev",
-        "tokenizer.json")
+        "tokenizer.json"
+    )
+}
+
+fun gcsEncoderDecoderPath(model: Models): String = when (model) {
+    Models.HuggingfaceTinyAr -> gcsHuggingfaceWhisperModelPath("openai", "tiny", "ar")
+    Models.HuggingfaceTinyEn -> gcsHuggingfaceWhisperModelPath("openai", "tiny", "en")
+    Models.HuggingfaceBaseAr -> gcsHuggingfaceWhisperModelPath("openai", "base", "ar")
+    Models.HuggingfaceBaseEn -> gcsHuggingfaceWhisperModelPath("openai", "base", "en")
+    Models.Sergenes -> gcsSergenesWhisperModelPath()
+    Models.SergenesEn -> gcsSergenesWhisperModelPath("en")
 }

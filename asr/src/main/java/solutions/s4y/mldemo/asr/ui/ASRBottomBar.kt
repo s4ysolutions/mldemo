@@ -4,8 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Agriculture
@@ -29,9 +29,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -41,8 +43,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import solutions.s4y.audio.AudioService
-import solutions.s4y.mldemo.asr.service.ASRService
-import solutions.s4y.mldemo.asr.service.whisper.DecoderEncoder
+import solutions.s4y.mldemo.asr.service.whisper.EncoderDecoder
+import solutions.s4y.mldemo.asr.service.whisper.SpeechState
 import solutions.s4y.mldemo.asr.viewmodels.ASRViewModel
 
 
@@ -56,7 +58,7 @@ fun ASRBottomBar() {
     val scope = rememberCoroutineScope()
 
     val au = viewModel.audioService
-    val auStatus = au.recordingStatusFlow.collectAsState(initial = au.currentStatus)
+    val auStatus = au.recordingStatusFlow.collectAsState()
 
     val classifier = viewModel.classifier
 
@@ -67,14 +69,14 @@ fun ASRBottomBar() {
 
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
-    var currentModel by viewModel.currentModel
+    val currentModel by viewModel.currentModel.flow.collectAsState()
 
     val showModelsMenu = remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     LaunchedEffect(currentModel) {
         try {
-            // asr.loadPipelineFromGCS(context, currentModel)
+            asr.loadModelFromGCS(context, currentModel)
         } catch (e: Exception) {
             Toast.makeText(context, "Failed to load model: ${e.message}", Toast.LENGTH_LONG).show()
             Log.e(TAG, "Failed to load model", e)
@@ -83,18 +85,21 @@ fun ASRBottomBar() {
 
     BottomAppBar(
         actions = {
-            Row {
+            Row(
+                modifier = Modifier.fillMaxHeight(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 // icon to show ASR state
                 val asrState = asrVoice.value
                 val asrColor = when (asrState) {
-                    ASRService.State.IDLE -> Color.Gray
-                    ASRService.State.NON_SPEECH -> Color.Black
-                    ASRService.State.SPEECH -> Color.Green
+                    SpeechState.IDLE -> Color.Gray
+                    SpeechState.NON_SPEECH -> Color.Black
+                    SpeechState.SPEECH -> Color.Green
                 }
                 Icon(Icons.Filled.Mic, tint = asrColor, contentDescription = "ASR state")
                 // icon to show decoding state
                 val isDecodingColor =
-                    if (isDecoding.value && asrState != ASRService.State.IDLE) Color.Red else Color.Transparent
+                    if (isDecoding.value && asrState != SpeechState.IDLE) Color.Red else Color.Transparent
                 Icon(
                     Icons.Filled.Agriculture,
                     tint = isDecodingColor,
@@ -110,50 +115,97 @@ fun ASRBottomBar() {
                 }
                 // icon to choose model
                 // Box {
-                    IconButton(onClick = {
-                        showModelsMenu.value = true
-                    }) {
-                        Icon(Icons.Filled.Dialpad, contentDescription = "Models")
-                    }
-                    DropdownMenu(
-                        expanded = showModelsMenu.value,
-                        onDismissRequest = { showModelsMenu.value = false },
-                    ) {
-                        DropdownMenuItem(
-                            modifier = Modifier.padding(4.dp),
-                            text = {
-                                Text(DecoderEncoder.Models.Sergenes.toString() + " Tiny")
-                            },
-                            leadingIcon = {
-                                if (currentModel == DecoderEncoder.Models.Sergenes)
-                                    Icon(
-                                        Icons.Outlined.Dialpad,
-                                        contentDescription = null
-                                    )
-                            },
-                            onClick = {
-                                currentModel = DecoderEncoder.Models.Sergenes
-                            })
-                        DropdownMenuItem(
-                            modifier = Modifier.padding(4.dp),
-                            text = {
-                                Text("HuggingFace OpenAI Base")
-                            },
-                            leadingIcon = {
-                                if (currentModel == DecoderEncoder.Models.HuggingfaceBaseEn)
-                                    Icon(
-                                        Icons.Outlined.Dialpad,
-                                        contentDescription = null
-                                    )
+                IconButton(onClick = {
+                    showModelsMenu.value = true
+                }) {
+                    Icon(Icons.Filled.Dialpad, contentDescription = "Models")
+                }
+                DropdownMenu(
+                    expanded = showModelsMenu.value,
+                    onDismissRequest = {
+                        showModelsMenu.value = false
+                    },
+                ) {
+                    DropdownMenuItem(
+                        modifier = Modifier.padding(4.dp),
+                        text = {
+                            Text(EncoderDecoder.Models.Sergenes.toString() + " Tiny")
+                        },
+                        leadingIcon = {
+                            if (currentModel == EncoderDecoder.Models.Sergenes)
                                 Icon(
                                     Icons.Outlined.Dialpad,
                                     contentDescription = null
                                 )
-                            },
-                            onClick = {
-                                currentModel = DecoderEncoder.Models.HuggingfaceBaseEn
-                            })
-                    //}
+                        },
+                        onClick = {
+                            viewModel.setCurrentModel( EncoderDecoder.Models.Sergenes)
+                            showModelsMenu.value = false
+                        })
+                    DropdownMenuItem(
+                        modifier = Modifier.padding(4.dp),
+                        text = {
+                            Text("HuggingFace OpenAI Tiny")
+                        },
+                        leadingIcon = {
+                            if (currentModel == EncoderDecoder.Models.HuggingfaceTinyEn)
+                                Icon(
+                                    Icons.Outlined.Dialpad,
+                                    contentDescription = null
+                                )
+                        },
+                        onClick = {
+                            viewModel.setCurrentModel(EncoderDecoder.Models.HuggingfaceTinyEn)
+                            showModelsMenu.value = false
+                        })
+                    DropdownMenuItem(
+                        modifier = Modifier.padding(4.dp),
+                        text = {
+                            Text("HuggingFace OpenAI Base")
+                        },
+                        leadingIcon = {
+                            if (currentModel == EncoderDecoder.Models.HuggingfaceBaseEn)
+                                Icon(
+                                    Icons.Outlined.Dialpad,
+                                    contentDescription = null
+                                )
+                        },
+                        onClick = {
+                            viewModel.setCurrentModel(EncoderDecoder.Models.HuggingfaceBaseEn)
+                            showModelsMenu.value = false
+                        })
+                    DropdownMenuItem(
+                        modifier = Modifier.padding(4.dp),
+                        text = {
+                            Text("HuggingFace OpenAI Tiny")
+                        },
+                        leadingIcon = {
+                            if (currentModel == EncoderDecoder.Models.HuggingfaceTinyAr)
+                                Icon(
+                                    Icons.Outlined.Dialpad,
+                                    contentDescription = null
+                                )
+                        },
+                        onClick = {
+                            viewModel.setCurrentModel(EncoderDecoder.Models.HuggingfaceTinyAr)
+                            showModelsMenu.value = false
+                        })
+                    DropdownMenuItem(
+                        modifier = Modifier.padding(4.dp),
+                        text = {
+                            Text("HuggingFace OpenAI Base")
+                        },
+                        leadingIcon = {
+                            if (currentModel == EncoderDecoder.Models.HuggingfaceBaseAr)
+                                Icon(
+                                    Icons.Outlined.Dialpad,
+                                    contentDescription = null
+                                )
+                        },
+                        onClick = {
+                            viewModel.setCurrentModel(EncoderDecoder.Models.HuggingfaceBaseAr)
+                            showModelsMenu.value = false
+                        })
                 }
             }
         },

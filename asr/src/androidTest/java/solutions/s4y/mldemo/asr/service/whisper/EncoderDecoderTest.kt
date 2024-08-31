@@ -1,6 +1,5 @@
 package solutions.s4y.mldemo.asr.service.whisper
 
-import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -11,7 +10,7 @@ import org.junit.runner.RunWith
 import solutions.s4y.mldemo.asr.service.rules.WhisperRule
 
 @RunWith(Enclosed::class)
-class DecoderEncoderTest {
+class EncoderDecoderTest {
     class ConstructorTest {
         @get:Rule
         val whisper = WhisperRule()
@@ -81,17 +80,20 @@ class DecoderEncoderTest {
         @Test
         fun runInference_shouldRecognizeEnglishMel_whenTinyGCSEnglishModel() = runBlocking {
             // Act
-            val tokens = whisper.gcsHuggingfaceTinyEn.runInference(whisper.testMelEn)!!
+            val tokens = whisper.gcsHuggingfaceTinyEn.transcribe(whisper.testMelEn)
             val transcription = whisper.tokenizerHuggingface.decode(tokens, skipSpecial = true)
+            val expected = " Paint the sockets in the wall, dull green the child crawled into the dense grass Brides fail where honest men work Trample the spark else the flames will spread The hilt of the sword was carved with fine designs a round hole was drilled through the thin board Footprints showed the path he took up the beach"
+            println("model transcribed: $transcription")
+            println("         expected: ${expected}")
             // Assert
-            assertEquals(whisper.testTokensAr11.size, tokens.size)
-            assertEquals(whisper.testTranscriptionAr11, transcription)
+            assertEquals(whisper.testTokensEn.size, tokens.size)
+            assertEquals(expected, transcription)
         }
 
         @Test
         fun runInference_shouldRecognizeArabicMel_whenTinyGCSArabicModel() = runBlocking {
             // Act
-            val tokens = whisper.gcsHuggingfaceTinyAr.runInference(whisper.testMelAr11)!!
+            val tokens = whisper.gcsHuggingfaceTinyAr.transcribe(whisper.testMelAr11)
             val transcription = whisper.tokenizerHuggingface.decode(tokens, skipSpecial = true)
             // Assert
             assertEquals(whisper.testTokensAr11.size, tokens.size)
@@ -101,7 +103,7 @@ class DecoderEncoderTest {
         @Test
         fun runInference_shouldRecognizeArabicMel_whenBaseGCSArabicModel() = runBlocking {
             // Act
-            val tokens = whisper.gcsHuggingfaceBaseAr.runInference(whisper.testMelAr11)!!
+            val tokens = whisper.gcsHuggingfaceBaseAr.transcribe(whisper.testMelAr11)
             val transcription = whisper.tokenizerHuggingface.decode(tokens, skipSpecial = true)
             // Assert
             assertEquals(whisper.testTokensAr11.size, tokens.size)
@@ -111,7 +113,7 @@ class DecoderEncoderTest {
         @Test
         fun runInference_shouldRecognizeEnglishMel_whenBaseGCSEnglishModel() = runBlocking {
             // Act
-            val tokens = whisper.gcsHuggingfaceBaseEn.runInference(whisper.testMelEn)!!
+            val tokens = whisper.gcsHuggingfaceBaseEn.transcribe(whisper.testMelEn)
             val transcription = whisper.tokenizerHuggingface.decode(tokens, skipSpecial = true)
             // Assert
             assertArrayEquals(whisper.testTokensEn, tokens)

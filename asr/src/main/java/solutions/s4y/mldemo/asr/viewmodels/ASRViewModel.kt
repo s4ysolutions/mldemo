@@ -8,6 +8,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import solutions.s4y.audio.AudioService
 import solutions.s4y.mldemo.asr.preferences.CurrentModel
 import solutions.s4y.mldemo.asr.service.ASRService
+import solutions.s4y.mldemo.asr.service.whisper.EncoderDecoder
 import solutions.s4y.mldemo.voice_detection.VoiceClassificationService
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,4 +20,8 @@ class ASRViewModel @Inject constructor(
     val audioService: AudioService,
     val classifier: VoiceClassificationService,
     val currentModel: CurrentModel = CurrentModel(context)
-) : ViewModel()
+) : ViewModel() {
+    fun setCurrentModel(model: EncoderDecoder.Models) {
+        currentModel.value = model
+    }
+}

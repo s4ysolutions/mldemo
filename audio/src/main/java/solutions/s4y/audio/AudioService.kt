@@ -8,7 +8,9 @@ import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import java.nio.ByteBuffer
@@ -26,17 +28,14 @@ class AudioService @Inject constructor() {
 
     private var audioRecord: AudioRecord? = null
     private val samplesCountAtomic = AtomicLong()
-    private val recordingStatusMutable = MutableSharedFlow<RecordingStatus>(
-        replay = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
+    private val recordingStatusMutable = MutableStateFlow(RecordingStatus.IDLE)
     private val samplesFlowMutable = MutableSharedFlow<ShortArray>(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
     val currentStatus get() = recordingStatusMutable.replayCache.firstOrNull()
-    val recordingStatusFlow: SharedFlow<RecordingStatus> = recordingStatusMutable
+    val recordingStatusFlow: StateFlow<RecordingStatus> = recordingStatusMutable
     val samplesFlow: SharedFlow<ShortArray> = samplesFlowMutable.asSharedFlow()
 
     @Suppress("MemberVisibilityCanBePrivate")
@@ -47,10 +46,6 @@ class AudioService @Inject constructor() {
                 samplesCount
             }
         }
-
-    init {
-        recordingStatusMutable.tryEmit(RecordingStatus.IDLE)
-    }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startRecording() {

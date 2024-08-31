@@ -4,26 +4,26 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import solutions.s4y.mldemo.asr.service.whisper.DecoderEncoder
+import solutions.s4y.mldemo.asr.service.whisper.EncoderDecoder
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KProperty
 
 @Singleton
 class CurrentModel @Inject constructor(@ApplicationContext context: Context) :
-    IAppProperty<DecoderEncoder.Models> {
+    IAppProperty<EncoderDecoder.Models> {
     private val preferences = context.getSharedPreferences("s4y.asr", Context.MODE_PRIVATE)
     private val _flow = MutableStateFlow(preferences.getInt(
         "current_model",
-        DecoderEncoder.Models.HuggingfaceBaseEn.ordinal
-    ).let { DecoderEncoder.Models.entries.toTypedArray()[it] })
+        EncoderDecoder.Models.HuggingfaceBaseEn.ordinal
+    ).let { EncoderDecoder.Models.entries.toTypedArray()[it] })
 
-    val flow: StateFlow<DecoderEncoder.Models> = _flow
+    val flow: StateFlow<EncoderDecoder.Models> = _flow
 
-    override var value: DecoderEncoder.Models
+    override var value: EncoderDecoder.Models
         get() {
             val model = preferences.getInt("current_model", 3)
-            return DecoderEncoder.Models.entries.toTypedArray()[model]
+            return EncoderDecoder.Models.entries.toTypedArray()[model]
         }
         set(value) {
             preferences
@@ -39,13 +39,13 @@ class CurrentModel @Inject constructor(@ApplicationContext context: Context) :
     override operator fun setValue(
         thisRef: Any?,
         property: KProperty<*>,
-        value: DecoderEncoder.Models
+        value: EncoderDecoder.Models
     ) {
         this.value = value
     }
 
-    override operator fun invoke(): DecoderEncoder.Models = value
-    override operator fun invoke(value: DecoderEncoder.Models) {
+    override operator fun invoke(): EncoderDecoder.Models = value
+    override operator fun invoke(value: EncoderDecoder.Models) {
         this.value = value
     }
 }

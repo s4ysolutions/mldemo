@@ -5,7 +5,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 // TODO: this should be an operator
-class GrowingAccumulator {
+class Accumulator16000 {
     private var sequenceBuffer: FloatArray = FloatArray(0)
     private val lock: Mutex = Mutex()
 
@@ -16,7 +16,7 @@ class GrowingAccumulator {
         }
     }
 
-    suspend fun growAccumulator(waveForms: FloatArray) = lock.withLock {
+    suspend fun add(waveForms: FloatArray) = lock.withLock {
         val newBuffer = FloatArray(sequenceBuffer.size + waveForms.size)
         sequenceBuffer.copyInto(newBuffer)
         waveForms.copyInto(newBuffer, sequenceBuffer.size)
