@@ -7,12 +7,11 @@ import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 
 fun File.toByteBuffer(): ByteBuffer {
-    val inputStream = FileInputStream(this)
-    val fileChannel = inputStream.channel
-    val startOffset = 0L
-    val declaredLength = fileChannel.size()
-    return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
-        .apply {
-            order(ByteOrder.nativeOrder())
-        }
+    FileInputStream(this).use { inputStream ->
+        val fileChannel = inputStream.channel
+        val startOffset = 0L
+        val declaredLength = fileChannel.size()
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+            .apply { order(ByteOrder.nativeOrder()) }
+    }
 }

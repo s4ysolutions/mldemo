@@ -13,16 +13,12 @@ import kotlinx.coroutines.runBlocking
 import org.junit.rules.MethodRule
 import org.junit.runners.model.FrameworkMethod
 import org.junit.runners.model.Statement
-import solutions.s4y.audio.accumulator.PCMFeed
-import solutions.s4y.audio.accumulator.WaveFormsAccumulator
-import solutions.s4y.firebase.FirebaseBlob
 import solutions.s4y.mldemo.googleServicesOptionsBuilder
 import solutions.s4y.audio.mel.IMelSpectrogram
 import solutions.s4y.audio.pcm.PCMAssetWavProvider
-import solutions.s4y.mldemo.asr.service.whisper.WhisperInferrer
-import solutions.s4y.mldemo.asr.service.whisper.WhisperTFLogMel
+import solutions.s4y.mldemo.asr.service.whisper.DecoderEncoder
+import solutions.s4y.mldemo.asr.service.logmel.TFLiteLogMel
 import solutions.s4y.mldemo.asr.service.whisper.WhisperTokenizer
-import java.io.File
 import java.io.InputStreamReader
 
 class WhisperRule : MethodRule {
@@ -31,82 +27,136 @@ class WhisperRule : MethodRule {
         private val sync = Any()
     }
 
+    private fun readTokensFromJsonAsset(name: String): IntArray {
+        val inputStream = context.assets.open(name)
+        val reader = InputStreamReader(inputStream)
+        val tokensData: MutableList<Int> = mutableListOf()
+        val array = JsonParser.parseReader(reader).asJsonArray
+        for (i in 0 until array.size()) {
+            val token = array[i].asInt
+            tokensData.add(token)
+        }
+        reader.close()
+        return tokensData.toIntArray()
+    }
+
+    private fun readMelFromJsonAsset(name: String): IntArray {
+        val inputStream = context.assets.open(name)
+        val reader = InputStreamReader(inputStream)
+        val tokensData: MutableList<MutableList<Int>> = mutableListOf()
+        val array = JsonParser.parseReader(reader).asJsonArray
+        for (i in 0 until array.size()) {
+            val batch = array[i].asJsonArray
+            val batchL = mutableListOf<Int>()
+            tokensData.add(batchL)
+            for (j in 0 until batch.size()) {
+                val token = batch[j].asInt
+                batchL.add(token)
+            }
+        }
+        reader.close()
+        return tokensData.flatten().toIntArray()
+    }
+
+    private fun readFloatArrayFromJsonAsset(name: String): FloatArray {
+        val inputStream = context.assets.open(name)
+        val reader = InputStreamReader(inputStream)
+        val melData: MutableList<MutableList<MutableList<Float>>> = mutableListOf()
+        val array = JsonParser.parseReader(reader).asJsonArray
+        for (i in 0 until array.size()) {
+            val batch = array[i].asJsonArray
+            val batchL = mutableListOf<MutableList<Float>>()
+            melData.add(batchL)
+            for (j in 0 until batch.size()) {
+                val sample = batch[j].asJsonArray
+                val sampleL = mutableListOf<Float>()
+                batchL.add(sampleL)
+                for (k in 0 until sample.size()) {
+                    val bin = sample[k].asFloat
+                    sampleL.add(bin)
+                }
+            }
+        }
+        reader.close()
+        return melData.flatten().flatten().toFloatArray()
+    }
+
     lateinit var context: Context
 
     @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
     val inferenceContext = newSingleThreadContext("YamnetVoiceClassifierTest")
 
-    val waveFormsAccumulator: WaveFormsAccumulator by lazy {
-        WaveFormsAccumulator()
+    val waveFormsAccumulator: WaveFormsAccumulatorFlow by lazy {
+        WaveFormsAccumulatorFlow()
     }
 
     val pcmFeed: PCMFeed by lazy {
         PCMFeed()
     }
 
-    val assetWhisperTFLogMel: IMelSpectrogram by lazy {
+    val assetTFLiteLogMel: IMelSpectrogram by lazy {
         runBlocking {
-            WhisperTFLogMel.loadFromGCS(
+            TFLiteLogMel.loadFromGCS(
                 context,
                 inferenceContext
             )
         }
     }
 
-    val gcsHuggingfaceTinyEn: WhisperInferrer by lazy {
+    val gcsHuggingfaceTinyEn: DecoderEncoder by lazy {
         runBlocking {
-            WhisperInferrer.loadFromGCS(
-                WhisperInferrer.Models.HuggingfaceTinyEn,
+            DecoderEncoder.loadFromGCS(
+                DecoderEncoder.Models.HuggingfaceTinyEn,
                 context,
                 inferenceContext
             )
         }
     }
 
-    val gcsHuggingfaceTinyAr: WhisperInferrer by lazy {
+    val gcsHuggingfaceTinyAr: DecoderEncoder by lazy {
         runBlocking {
-            WhisperInferrer.loadFromGCS(
-                WhisperInferrer.Models.HuggingfaceTinyAr,
+            DecoderEncoder.loadFromGCS(
+                DecoderEncoder.Models.HuggingfaceTinyAr,
                 context,
                 inferenceContext
             )
         }
     }
 
-    val gcsHuggingfaceBaseEn: WhisperInferrer by lazy {
+    val gcsHuggingfaceBaseEn: DecoderEncoder by lazy {
         runBlocking {
-            WhisperInferrer.loadFromGCS(
-                WhisperInferrer.Models.HuggingfaceBaseEn,
+            DecoderEncoder.loadFromGCS(
+                DecoderEncoder.Models.HuggingfaceBaseEn,
                 context,
                 inferenceContext
             )
         }
     }
 
-    val gcsHuggingfaceBaseAr: WhisperInferrer by lazy {
+    val gcsHuggingfaceBaseAr: DecoderEncoder by lazy {
         runBlocking {
-            WhisperInferrer.loadFromGCS(
-                WhisperInferrer.Models.HuggingfaceBaseAr,
+            DecoderEncoder.loadFromGCS(
+                DecoderEncoder.Models.HuggingfaceBaseAr,
                 context,
                 inferenceContext
             )
         }
     }
 
-    val gcsSergenesTiny: WhisperInferrer by lazy {
+    val gcsSergenesTiny: DecoderEncoder by lazy {
         runBlocking {
-            WhisperInferrer.loadFromGCS(
-                WhisperInferrer.Models.Sergenes,
+            DecoderEncoder.loadFromGCS(
+                DecoderEncoder.Models.Sergenes,
                 context,
                 inferenceContext
             )
         }
     }
 
-    val gcsSergenesTinyEn: WhisperInferrer by lazy {
+    val gcsSergenesTinyEn: DecoderEncoder by lazy {
         runBlocking {
-            WhisperInferrer.loadFromGCS(
-                WhisperInferrer.Models.SergenesEn,
+            DecoderEncoder.loadFromGCS(
+                DecoderEncoder.Models.SergenesEn,
                 context,
                 inferenceContext
             )
@@ -135,44 +185,19 @@ class WhisperRule : MethodRule {
     }
 
     val testMelAr11: FloatArray by lazy {
-        val inputStream = context.assets.open("adam/1-1-mel.json")
-        val reader = InputStreamReader(inputStream)
-        val melData: MutableList<MutableList<MutableList<Float>>> = mutableListOf()
-        val array = JsonParser.parseReader(reader).asJsonArray
-        for (i in 0 until array.size()) {
-            val batch = array[i].asJsonArray
-            val batchL = mutableListOf<MutableList<Float>>()
-            melData.add(batchL)
-            for (j in 0 until batch.size()) {
-                val sample = batch[j].asJsonArray
-                val sampleL = mutableListOf<Float>()
-                batchL.add(sampleL)
-                for (k in 0 until sample.size()) {
-                    val bin = sample[k].asFloat
-                    sampleL.add(bin)
-                }
-            }
-        }
-        reader.close()
-        melData.flatten().flatten().toFloatArray()
+        readFloatArrayFromJsonAsset("adam/1-1-mel.json")
+    }
+
+    val testMelEn: FloatArray by lazy {
+        readFloatArrayFromJsonAsset("OSR_us_000_0030_16k-mel.json")
     }
 
     val testTokensAr11: IntArray by lazy {
-        val inputStream = context.assets.open("adam/1-1-tokens.json")
-        val reader = InputStreamReader(inputStream)
-        val tokensData: MutableList<MutableList<Int>> = mutableListOf()
-        val array = JsonParser.parseReader(reader).asJsonArray
-        for (i in 0 until array.size()) {
-            val batch = array[i].asJsonArray
-            val batchL = mutableListOf<Int>()
-            tokensData.add(batchL)
-            for (j in 0 until batch.size()) {
-                val token = batch[j].asInt
-                batchL.add(token)
-            }
-        }
-        reader.close()
-        tokensData.flatten().toIntArray()
+        readTokensFromJsonAsset("adam/1-1-tokens.json")
+    }
+
+    val testTokensEn: IntArray by lazy {
+        readTokensFromJsonAsset("OSR_us_000_0030_16k-tokens.json")
     }
 
     val tsetTokesSet: Set<Int> by lazy {
@@ -187,8 +212,12 @@ class WhisperRule : MethodRule {
         transcription
     }
 
-    val testTranscriptionEnTimestamp: String by lazy {
+    val testTranscriptionEnTinyTimestamp: String by lazy {
         "<|0.00|> Paint the sockets in the wall, dull green. The child crawled into the dense grass,<|9.00|><|9.00|> Bride's failware honest men work. Trampal the spark, else the flames will spread.<|16.00|><|16.00|> The hilt of the sword was carved with fine designs. A round hole was drilled through the thin board.<|25.00|><|25.00|>"
+    }
+
+    val testTranscriptionEn: String by lazy {
+        " Paint the sockets in the wall"
     }
 
     val testTranscriptionAr11WithError: String by lazy {

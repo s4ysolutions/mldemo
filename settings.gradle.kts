@@ -1,5 +1,14 @@
 @file:Suppress("UnstableApiUsage")
 
+include(":tflite")
+
+
+include(":kotlin")
+
+
+include(":calculator")
+
+
 pluginManagement {
     repositories {
         google {

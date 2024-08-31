@@ -72,7 +72,7 @@ class FirebaseBlob(private val blobPath: String, private val localFile: File) {
                     return localFile
                 }
             }catch (ex: Exception) {
-                Log.w(TAG, "get: $blobPath", ex)
+                Log.w(TAG, "could not get metadata for: $blobPath, fallback to the existing $localFile", ex)
                 _isLocal = true
                 return localFile
             }

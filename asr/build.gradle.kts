@@ -74,11 +74,6 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.gson)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.gpu)
-    implementation(libs.tensorflow.lite.gpu.delegate.plugin)
-    implementation(libs.tensorflow.lite.gpu.api)
-    implementation(libs.tensorflow.lite.support)
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)

@@ -16,7 +16,7 @@ import kotlin.coroutines.coroutineContext
 class WhisperPipeline(
     waveFormsFlow: Flow<FloatArray>,
     private val melSpectrogram: IMelSpectrogram,
-    private val model: WhisperInferrer,
+    private val model: DecoderEncoder,
     private val tokenizer: WhisperTokenizer,
 ) {
     // each next decoding contains all previous waveforms

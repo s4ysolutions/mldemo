@@ -19,9 +19,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.newSingleThreadContext
 import solutions.s4y.audio.mel.IMelSpectrogram
 import solutions.s4y.mldemo.asr.service.accumulator.GrowingAccumulator
-import solutions.s4y.mldemo.asr.service.whisper.WhisperInferrer
+import solutions.s4y.mldemo.asr.service.whisper.DecoderEncoder
 import solutions.s4y.mldemo.asr.service.whisper.WhisperPipeline
-import solutions.s4y.mldemo.asr.service.whisper.WhisperTFLogMel
+import solutions.s4y.mldemo.asr.service.logmel.TFLiteLogMel
 import solutions.s4y.mldemo.asr.service.whisper.WhisperTokenizer
 import solutions.s4y.mldemo.voice_detection.yamnet.IVoiceClassifier
 import java.io.Closeable
@@ -162,23 +162,23 @@ class ASRService @Inject constructor() : Closeable {
     }
 
     @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
-    suspend fun loadPipelineFromGCS(context: Context, model: WhisperInferrer.Models) {
+    suspend fun loadPipelineFromGCS(context: Context, model: DecoderEncoder.Models) {
         stop()
         _flowModelReady.value = false
 
         val melContext = newSingleThreadContext("inference_mel")
         val melSpectrogram: IMelSpectrogram =
-            WhisperTFLogMel.loadFromGCS(context, melContext)
+            TFLiteLogMel.loadFromGCS(context, melContext)
 
         val whisperContext = newSingleThreadContext("inference_whisper")
-        val whisperInferrer = WhisperInferrer.loadFromGCS(model, context, whisperContext)
+        val decoderEncoder = DecoderEncoder.loadFromGCS(model, context, whisperContext)
 
         val tokenizer = WhisperTokenizer.loadFromGCS(context)
 
         val provider = WhisperPipeline(
             waveForms,
             melSpectrogram,
-            whisperInferrer,
+            decoderEncoder,
             tokenizer
         )
         whisperPipeline.set(provider)
