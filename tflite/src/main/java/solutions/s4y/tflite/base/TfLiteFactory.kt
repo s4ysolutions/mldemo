@@ -95,7 +95,7 @@ abstract class TfLiteFactory : Closeable {
     }
 
     protected companion object {
-        private const val TAG = "TFLiteInterpreterFactory"
+        private const val TAG = "TFLiteFactory"
         private var inferrerThreadId: Long = -1
         private val isInitialized = AtomicBoolean(false)
         private val errorHandler = CoroutineExceptionHandler { _, e ->

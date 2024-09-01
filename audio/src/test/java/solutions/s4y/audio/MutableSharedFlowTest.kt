@@ -1,4 +1,4 @@
-package solutions.s4y.pcm
+package solutions.s4y.audio
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

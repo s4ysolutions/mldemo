@@ -1,4 +1,4 @@
-package solutions.s4y.pcm
+package solutions.s4y.audio
 
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async

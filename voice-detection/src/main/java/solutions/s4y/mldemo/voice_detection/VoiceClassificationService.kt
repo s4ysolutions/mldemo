@@ -22,12 +22,15 @@ class VoiceClassificationService @Inject constructor(private var classifier: IVo
         MutableSharedFlow(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val _flowClasses: MutableSharedFlow<IVoiceClassifier.Classes> =
         MutableSharedFlow(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val _flowDurations: MutableStateFlow<Long> = MutableStateFlow(0)
+
     private var jobAudioSamples: Job? = null
     private var jobClassifier: Job? = null
     private val mutableFlowReady: MutableStateFlow<Boolean> =
         MutableStateFlow(false)
 
     val flowReady: StateFlow<Boolean> = mutableFlowReady
+    val flowDuration: StateFlow<Long> = _flowDurations
 
     suspend fun initialize(context: Context) {
         if (mutableFlowReady.value) return
@@ -43,6 +46,7 @@ class VoiceClassificationService @Inject constructor(private var classifier: IVo
             .onEach { wavesForm ->
                 if (_flowClasses.subscriptionCount.value > 0) {
                     val classes = classifier.classify(wavesForm)
+                    _flowDurations.emit(classifier.duration)
                     _flowClasses.emit(classes)
                     // avoid extra work if no subscribers
                     if (_flowLabels.subscriptionCount.value > 0) {

@@ -1,6 +1,7 @@
 package solutions.s4y.mldemo.asr.service.whisper
 
 import android.content.Context
+import android.util.SparseArray
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import solutions.s4y.firebase.FirebaseBlob
@@ -9,8 +10,8 @@ import java.io.File
 import java.io.InputStreamReader
 
 class WhisperTokenizer private constructor(jsonString: String) {
-    private val specialTokens: Map<Int, String>
-    private val unicodeTokens: Map<Int, String>
+    private val specialTokens: SparseArray<String>
+    private val unicodeTokens: SparseArray<String>
 
     private val unicodeToBytes: Map<Char, Int> = run {
         val charRanges = listOf('!'..'~', '¡'..'¬', '®'..'ÿ').flatten()
@@ -27,17 +28,23 @@ class WhisperTokenizer private constructor(jsonString: String) {
         charList.zip(byteList).toMap()
     }
 
+    private val unknownByte = '?'.code.toByte()
+
     private fun tokens2string(token: String): String {
-        val bytes =
-            token.map { unicodeToBytes[it]?.toByte() ?: ' '.code.toByte() }.toByteArray()
+        val bytes = ByteArray(token.length)
+        for ((index, it) in token.withIndex()) {
+            val byte = unicodeToBytes[it]?.toByte() ?: unknownByte
+            bytes[index] = byte
+        }
+            //token.map { unicodeToBytes[it]?.toByte() ?: unknownByte }.toByteArray()
         return String(bytes, Charsets.UTF_8)
     }
 
     init {
         val gson = Gson()
         val tokenizerJson = gson.fromJson(jsonString, TokenizerJSON.Tokenizer::class.java)
-        specialTokens = mutableMapOf()
-        unicodeTokens = mutableMapOf()
+        specialTokens = SparseArray() //mutableMapOf()
+        unicodeTokens = SparseArray() //mutableMapOf()
         tokenizerJson.addedTokens
             .forEach {
                 if (it.special) {

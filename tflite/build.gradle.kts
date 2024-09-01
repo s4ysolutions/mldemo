@@ -7,10 +7,10 @@ plugins {
 
 android {
     namespace = "solutions.s4y.tflite"
-    compileSdk = 34
+    compileSdk = libs.versions.sdkCompile.get().toInt()
 
     defaultConfig {
-        minSdk = 24
+        minSdk = libs.versions.sdkMin.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -60,7 +60,7 @@ dependencies {
     // Interpreter, use obsolete version is skipped
     implementation(libs.tensorflow.lite)
     // InterpreterApi
-    // implementation(libs.tensorflow.lite.api)
+    implementation(libs.tensorflow.lite.api)
     // TensorBuffer
     implementation(libs.tensorflow.lite.support)
     // GpuDelegate,CompatibilityList

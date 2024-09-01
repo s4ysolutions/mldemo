@@ -1,27 +1,18 @@
 package solutions.s4y.mldemo.asr.service.whisper
 
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import solutions.s4y.tflite.base.TfLiteInterpreter
+import java.io.Closeable
 
-class EncoderDecoder(private val interpreter: TfLiteInterpreter) {
-    enum class Models {
-        HuggingfaceTinyAr,
-        HuggingfaceTinyEn,
-        HuggingfaceBaseAr,
-        HuggingfaceBaseEn,
-        SergenesEn,
-        Sergenes
-    }
+class EncoderDecoder(private val interpreter: TfLiteInterpreter) : Closeable by interpreter {
 
-    // must be run in the same thread as runInference addDelegate
-    /**
-     * Run inference on the given mel spectrogram
-     * @param logMelSpectrogram Flattened [1, 80, 3000] FloatArray of 1 batch x 80 mel bins x 3000 frames
-     * @return The list of tokens
-     */
+    val duration: Int get() = interpreter.lastInferenceDuration
+
     suspend fun transcribe(logMelSpectrogram: FloatArray): IntArray {
         interpreter.run(logMelSpectrogram)
-        Log.d(TAG, "Run inference (decode) done in ${interpreter.lastInferenceDuration} ms")
+        Log.d(TAG, "Run inference (encode-decode) done in ${interpreter.lastInferenceDuration} ms")
         return interpreter.intOutput
     }
 

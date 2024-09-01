@@ -12,11 +12,16 @@ class TfLiteStandaloneInterpreter(
 ) : TfLiteInterpreter(inferenceContext, inputs(interpreter), output(interpreter), onClose) {
     override val lastInferenceDuration: Long
         get() =
-            interpreter.lastNativeInferenceDurationNanoseconds / 1000
+            interpreter.lastNativeInferenceDurationNanoseconds / 1000000
 
 
     override fun runInference(input: FloatArray) {
         interpreter.run(inputBuffers[0], outputBuffer)
+    }
+
+    override fun close() {
+        interpreter.close()
+        super.close()
     }
 
     companion object {

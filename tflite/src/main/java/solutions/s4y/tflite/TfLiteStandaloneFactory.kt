@@ -34,7 +34,7 @@ class TfLiteStandaloneFactory @Inject constructor(): TfLiteFactory() {
             Log.d(TAG, "GPU delegate is supported")
             val delegateOptions =
                 compatList.bestOptionsForThisDevice
-            delegateOptions.setForceBackend(GpuDelegateFactory.Options.GpuBackend.OPENGL)
+            // delegateOptions.setForceBackend(GpuDelegateFactory.Options.GpuBackend.OPENGL)
             // must be run in the same thread as runInference
             val gpuDelegate = GpuDelegate(delegateOptions)
             options.addDelegate(gpuDelegate)
@@ -42,9 +42,20 @@ class TfLiteStandaloneFactory @Inject constructor(): TfLiteFactory() {
             Log.d(TAG, "GPU delegate is not supported")
             options.setNumThreads(Runtime.getRuntime().availableProcessors())
         }
-        val interpreter = InterpreterApi.create(modelBuffer, options)
-        Log.d(TAG, "Interpreter created")
-        return TfLiteStandaloneInterpreter(interpreter, inferenceContext, onClose)
+        try {
+            val interpreter = InterpreterApi.create(modelBuffer, options)
+            Log.d(TAG, "Interpreter created")
+            return TfLiteStandaloneInterpreter(interpreter, inferenceContext, onClose)
+        } catch (e: IllegalArgumentException) {
+            Log.w(TAG, "Error during InterpreterApi.create", e)
+            Log.w(TAG, "Fallback to CPU delegate")
+            val options = Options()
+            options.setNumThreads(Runtime.getRuntime().availableProcessors())
+            val interpreter = InterpreterApi.create(modelBuffer, options)
+            Log.d(TAG, "Interpreter created (fallback to CPU delegate)")
+            return TfLiteStandaloneInterpreter(interpreter, inferenceContext, onClose)
+            throw e
+        }
     }
 
     companion object {

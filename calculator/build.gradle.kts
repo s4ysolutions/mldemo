@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -5,10 +7,10 @@ plugins {
 
 android {
     namespace = "solutions.s4y.calculator"
-    compileSdk = 34
+    compileSdk = libs.versions.sdkCompile.get().toInt()
 
     defaultConfig {
-        minSdk = 24
+        minSdk = libs.versions.sdkMin.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -34,21 +36,29 @@ android {
             version = "3.22.1"
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
-dependencies {
+kotlin {
+    jvmToolchain(17)
+}
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
+
     testImplementation(libs.junit)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

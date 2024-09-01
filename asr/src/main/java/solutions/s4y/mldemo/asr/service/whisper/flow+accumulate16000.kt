@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger
 private const val TAG = "accumulate16000"
 private const val NON_SPEECH_THRESHOLD = 3
 private const val MIN_DURATION = 1 // do not emit less than
-private const val MAX_DURATION = 3 // force emit after this duration
+private const val MAX_DURATION = 2 // force emit after this duration
 
 enum class SpeechState {
     IDLE,
@@ -20,10 +20,14 @@ enum class SpeechState {
 }
 
 
-fun Flow<IVoiceClassifier.Classes>.accumulate16000(flowState: MutableStateFlow<SpeechState>): Flow<FloatArray> =
+fun Flow<IVoiceClassifier.Classes>.accumulate16000(
+    flowState: MutableStateFlow<SpeechState>,
+    flowSize: MutableStateFlow<Int>
+): Flow<FloatArray> =
     flow {
         val nonSpeechCount = AtomicInteger(0)
         val accumulator16000 = Accumulator16000()
+        flowSize.value = 0
 
         // TODO: lambdas should be avoided somehow?
         suspend fun isMinDuration() = accumulator16000.duration() > MIN_DURATION
@@ -35,6 +39,7 @@ fun Flow<IVoiceClassifier.Classes>.accumulate16000(flowState: MutableStateFlow<S
             if (cls == 0 || cls == 1 || cls == 3 || /*cls == 24 ||*/ cls == 132) {
                 nonSpeechCount.set(0)
                 accumulator16000.add(it.waveForms)
+                flowSize.value = accumulator16000.duration()
                 flowState.value = SpeechState.SPEECH
                 Log.d(
                     TAG,
@@ -71,6 +76,7 @@ fun Flow<IVoiceClassifier.Classes>.accumulate16000(flowState: MutableStateFlow<S
                         Log.d(TAG, "emit waveforms: $success")
                     }
                     accumulator16000.reset()
+                    flowSize.value = accumulator16000.duration()
                     //TODO: clear the queue - hack
                     emit(FloatArray(0))
                 }
@@ -78,6 +84,7 @@ fun Flow<IVoiceClassifier.Classes>.accumulate16000(flowState: MutableStateFlow<S
                 count > NON_SPEECH_THRESHOLD -> {
                     //TODO: ugly, should never be needed, but just in case
                     accumulator16000.reset()
+                    flowSize.value = accumulator16000.duration()
                     Log.d(
                         TAG,
                         "Non speech cls=$cls detected $count times, (long pause), accumulated=${accumulator16000.duration()}s"
