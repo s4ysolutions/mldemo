@@ -10,7 +10,7 @@ class TFLiteLogMel(
 ) :
     IMelSpectrogram, Closeable by interpreter {
 
-    val duration: Long get() = interpreter.lastInferenceDuration
+    val duration: Int get() = interpreter.lastInferenceDuration
 
     override suspend fun getMelSpectrogram(waveForms: FloatArray): FloatArray {
         interpreter.run(waveForms)

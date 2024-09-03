@@ -10,13 +10,13 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
 import org.junit.rules.MethodRule
 import org.junit.runners.model.FrameworkMethod
 import org.junit.runners.model.Statement
 import solutions.s4y.mldemo.googleServicesOptionsBuilder
 import solutions.s4y.audio.mel.IMelSpectrogram
 import solutions.s4y.audio.pcm.PCMAssetWavProvider
+import solutions.s4y.mldemo.asr.service.AsrModels
 import solutions.s4y.mldemo.asr.service.gcs.gcsEncoderDecoderPath
 import solutions.s4y.mldemo.asr.service.gcs.gcsFeaturesExtractorPath
 import solutions.s4y.mldemo.asr.service.whisper.EncoderDecoder
@@ -121,7 +121,7 @@ class WhisperRule : MethodRule {
             EncoderDecoder(
                 tfLiteFactory.createInterpreterFromGCS(
                     context, gcsEncoderDecoderPath(
-                        EncoderDecoder.Models.HuggingfaceTinyEn,
+                        AsrModels.HuggingfaceTinyEn,
                     ),
                     "test-huggingface-tiny-en"
                 )
@@ -134,7 +134,7 @@ class WhisperRule : MethodRule {
             EncoderDecoder(
                 tfLiteFactory.createInterpreterFromGCS(
                     context, gcsEncoderDecoderPath(
-                        EncoderDecoder.Models.HuggingfaceTinyAr,
+                        AsrModels.HuggingfaceTinyAr,
                     ),
                     "test-huggingface-tiny-ar"
                 )
@@ -147,7 +147,7 @@ class WhisperRule : MethodRule {
             EncoderDecoder(
                 tfLiteFactory.createInterpreterFromGCS(
                     context, gcsEncoderDecoderPath(
-                        EncoderDecoder.Models.HuggingfaceBaseEn,
+                        AsrModels.HuggingfaceBaseEn,
                     ),
                     "test-huggingface-base-en"
                 )
@@ -160,7 +160,7 @@ class WhisperRule : MethodRule {
             EncoderDecoder(
                 tfLiteFactory.createInterpreterFromGCS(
                     context, gcsEncoderDecoderPath(
-                        EncoderDecoder.Models.HuggingfaceBaseAr,
+                        AsrModels.HuggingfaceBaseAr,
                     ),
                     "test-huggingface-base-ar"
                 )
@@ -173,7 +173,7 @@ class WhisperRule : MethodRule {
             EncoderDecoder(
                 tfLiteFactory.createInterpreterFromGCS(
                     context, gcsEncoderDecoderPath(
-                        EncoderDecoder.Models.Sergenes,
+                        AsrModels.Sergenes,
                     ),
                     "test-sergenes-tiny"
                 )
@@ -186,7 +186,7 @@ class WhisperRule : MethodRule {
             EncoderDecoder(
                 tfLiteFactory.createInterpreterFromGCS(
                     context, gcsEncoderDecoderPath(
-                        EncoderDecoder.Models.SergenesEn,
+                        AsrModels.SergenesEn,
                     ),
                     "test-sergenes-tiny-en"
                 )

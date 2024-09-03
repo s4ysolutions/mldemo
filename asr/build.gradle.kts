@@ -55,7 +55,7 @@ dependencies {
 
     implementation(project(":audio"))
     implementation(project(":firebase"))
-    implementation(project(":voice-detection"))
+    implementation(project(":audio-classification"))
     implementation(project(":tflite"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

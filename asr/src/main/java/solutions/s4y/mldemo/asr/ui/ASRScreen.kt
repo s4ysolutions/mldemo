@@ -8,8 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,52 +20,51 @@ import solutions.s4y.mldemo.asr.viewmodels.ASRViewModel
 
 @Composable
 fun VoiceTranscriptionScreen(viewModel: ASRViewModel = hiltViewModel()) {
-    val durationClassifier = viewModel.classifier.flowDuration.collectAsState().value
-    val last = viewModel.asrService.flow.collectAsState("").value
-    val durationLogMel = viewModel.asrService.flowLogMelDuration.collectAsState().value
-    val durationDecode = viewModel.asrService.flowEncoderDecoderDuration.collectAsState().value
-    val recordDuration = viewModel.asrService.flowRecordDuration.collectAsState().value
-    val decodingDuration = viewModel.asrService.flowDecodingQueuedDuration.collectAsState().value
-    val isDecoding = viewModel.asrService.flowIsDecoding.collectAsState().value
-    val model = viewModel.currentModel.flow.collectAsState().value
     val currentScope = rememberCoroutineScope()
-    val busySeconds = viewModel.flowBusySeconds.collectAsState().value
-    val recordingStatue = viewModel.audioService.recordingStatusFlow.collectAsState().value
+    val asrService = viewModel.asrService
 
-    LaunchedEffect(Unit) {
-        viewModel.trackTranscribing(currentScope)
-    }
+    val asrCurrentModel by asrService.flowCurrentModel.collectAsState()
+    val asrLastResult by asrService.flowASR.collectAsState("")
+
+    val classifierLastInferenceDuration by asrService.classifier.flowLastDuration.collectAsState()
+
+    val recorderState by asrService.audioService.recordingStatusFlow.collectAsState()
+
+    val tfLiteIsInferencing by asrService.flowTfLiteIsInferencing.collectAsState()
+    val tfLiteInferencingDuration by asrService.flowTfLiteCurrentInferencingDuration.collectAsState()
+    val tfLiteLastEncoderDecoderDuration by asrService.flowTfLiteLastEncoderDecoderDuration.collectAsState()
+    val tfLiteLastLogMelDuration by asrService.flowTfLiteLastLogMelDuration.collectAsState()
+    val tfLiteLastRecordSize by asrService.flowTfLiteLastRecordSize.collectAsState()
+    val tfLiteAccumulatorSize by asrService.flowTfLiteAccumulatorSize.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(4.dp)
-    )
-    {
+    ) {
         Text(
-            text = last,
+            text = asrLastResult,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         )
         Column(modifier = Modifier.align(Alignment.End)) {
-            Text(text = "Model: $model")
-            if (recordingStatue == AudioService.RecordingStatus.RECORDING && recordDuration > 0) {
-                Text(text = "Record to decode: $recordDuration s")
+            Text(text = "Model: $asrCurrentModel")
+            if (recorderState == AudioService.RecordingStatus.RECORDING && tfLiteAccumulatorSize > 0) {
+                Text(text = "Record to decode: $tfLiteAccumulatorSize s")
             }
-            if (isDecoding) {
+            if (tfLiteIsInferencing) {
                 Text(text = "Current decoding:")
-                Text(text = " - length of record of $decodingDuration s")
-                Text(text = " - duration: $busySeconds s")
+                Text(text = " - length of record $tfLiteLastRecordSize s")
+                Text(text = " - duration: $tfLiteInferencingDuration s")
             }
-            if (durationClassifier > 0 || last.isNotEmpty())
-                Text(text = "TF Lite timings:")
-            if (durationClassifier > 0)
-                Text(text = " - voice detection: $durationClassifier ms")
-            if (last.isNotEmpty()) {
-                Text(text = " - LogMel spectrogram: $durationLogMel ms")
-                Text(text = " - decode: $durationDecode ms")
+            if (classifierLastInferenceDuration > 0 || asrLastResult.isNotEmpty()) Text(text = "TF Lite timings:")
+            if (classifierLastInferenceDuration > 0) Text(text = " - voice detection: $classifierLastInferenceDuration ms")
+            if (tfLiteLastLogMelDuration > 0)
+                Text(text = " - LogMel spectrogram: $tfLiteLastLogMelDuration ms")
+            if (tfLiteLastEncoderDecoderDuration > 0) {
+                Text(text = " - decode: $tfLiteLastEncoderDecoderDuration ms")
             }
         }
     }

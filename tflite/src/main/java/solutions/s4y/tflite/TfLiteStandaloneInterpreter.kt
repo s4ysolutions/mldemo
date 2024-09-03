@@ -1,8 +1,10 @@
 package solutions.s4y.tflite
 
+import android.util.Log
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.InterpreterApi
 import solutions.s4y.tflite.base.TfLiteInterpreter
+import java.nio.BufferOverflowException
 import kotlin.coroutines.CoroutineContext
 
 class TfLiteStandaloneInterpreter(
@@ -10,13 +12,21 @@ class TfLiteStandaloneInterpreter(
     inferenceContext: CoroutineContext,
     onClose: () -> Unit
 ) : TfLiteInterpreter(inferenceContext, inputs(interpreter), output(interpreter), onClose) {
-    override val lastInferenceDuration: Long
+    override val lastInferenceDuration: Int
         get() =
-            interpreter.lastNativeInferenceDurationNanoseconds / 1000000
+            (interpreter.lastNativeInferenceDurationNanoseconds / 1000000).toInt()
 
 
     override fun runInference(input: FloatArray) {
-        interpreter.run(inputBuffers[0], outputBuffer)
+        try {
+            interpreter.run(inputBuffers[0], outputBuffer)
+        } catch (e: BufferOverflowException) {
+            Log.e(
+                TAG,
+                "runInference: BufferOverflowException input: ${inputBuffers[0].capacity()}, output: ${outputBuffer.capacity()}",
+                e
+            )
+        }
     }
 
     override fun close() {
@@ -25,6 +35,7 @@ class TfLiteStandaloneInterpreter(
     }
 
     companion object {
+        const val TAG = "TfLiteStandaloneInterpreter"
         private fun inputs(interpreter: InterpreterApi): List<Pair<IntArray, DataType>> {
             return (0 until interpreter.inputTensorCount).map { i ->
                 val shape = interpreter.getInputTensor(i).shape()

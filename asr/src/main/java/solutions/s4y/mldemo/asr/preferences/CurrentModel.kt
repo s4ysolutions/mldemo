@@ -4,26 +4,26 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import solutions.s4y.mldemo.asr.service.whisper.EncoderDecoder
+import solutions.s4y.mldemo.asr.service.AsrModels
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KProperty
 
 @Singleton
 class CurrentModel @Inject constructor(@ApplicationContext context: Context) :
-    IAppProperty<EncoderDecoder.Models> {
+    IAppProperty<AsrModels> {
     private val preferences = context.getSharedPreferences("s4y.asr", Context.MODE_PRIVATE)
     private val _flow = MutableStateFlow(preferences.getInt(
         "current_model",
-        EncoderDecoder.Models.HuggingfaceBaseEn.ordinal
-    ).let { EncoderDecoder.Models.entries.toTypedArray()[it] })
+        AsrModels.AndroidFreeForm.ordinal
+    ).let { AsrModels.entries.toTypedArray()[it] })
 
-    val flow: StateFlow<EncoderDecoder.Models> = _flow
+    val flow: StateFlow<AsrModels> = _flow
 
-    override var value: EncoderDecoder.Models
+    override var value: AsrModels
         get() {
             val model = preferences.getInt("current_model", 3)
-            return EncoderDecoder.Models.entries.toTypedArray()[model]
+            return AsrModels.entries.toTypedArray()[model]
         }
         set(value) {
             preferences
@@ -39,13 +39,13 @@ class CurrentModel @Inject constructor(@ApplicationContext context: Context) :
     override operator fun setValue(
         thisRef: Any?,
         property: KProperty<*>,
-        value: EncoderDecoder.Models
+        value: AsrModels
     ) {
         this.value = value
     }
 
-    override operator fun invoke(): EncoderDecoder.Models = value
-    override operator fun invoke(value: EncoderDecoder.Models) {
+    override operator fun invoke(): AsrModels = value
+    override operator fun invoke(value: AsrModels) {
         this.value = value
     }
 }

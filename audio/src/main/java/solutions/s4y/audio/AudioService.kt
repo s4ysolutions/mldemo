@@ -96,6 +96,9 @@ class AudioService @Inject constructor() {
     }
 
     fun stopRecording() {
+        if (audioRecord == null) {
+            return
+        }
         recordingStatusMutable.tryEmit(RecordingStatus.IDLE)
         audioRecord?.stop()
         audioRecord?.release()

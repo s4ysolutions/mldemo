@@ -48,7 +48,7 @@ abstract class TfLiteInterpreter(
 
     protected abstract fun runInference(input: FloatArray)
 
-    abstract val lastInferenceDuration: Long
+    abstract val lastInferenceDuration: Int
 
     suspend fun run(input: FloatArray) = withContext(inferenceContext) {
         assert(Thread.currentThread().id == createThreadId) {
@@ -80,6 +80,7 @@ abstract class TfLiteInterpreter(
                 DataType.INT8 -> Byte.SIZE_BYTES
                 else -> throw IllegalArgumentException("Unsupported data type: $dataType")
             }
+            // + itemSize is a dirty hack to avoid sporadic crashes
             return ByteBuffer.allocateDirect(shape.reduce { acc, i -> acc * i } * itemSize).apply {
                 order(ByteOrder.nativeOrder())
             }

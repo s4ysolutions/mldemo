@@ -16,7 +16,7 @@ class YamnetVoiceClassifier @Inject constructor(
     private lateinit var interpreter: TfLiteInterpreter
 
 
-    override val duration: Long get() = interpreter.lastInferenceDuration
+    override val duration: Int get() = interpreter.lastInferenceDuration
     override val inputSize: Int = PCM_BATCH
 
     override suspend fun initialize(context: Context) {

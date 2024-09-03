@@ -2,7 +2,7 @@
 
 package solutions.s4y.mldemo.asr.service.gcs
 
-import solutions.s4y.mldemo.asr.service.whisper.EncoderDecoder.Models
+import solutions.s4y.mldemo.asr.service.AsrModels
 
 private fun gcsPath(
     project: String,
@@ -79,11 +79,12 @@ fun gcsTokenizerPath(): String {
     )
 }
 
-fun gcsEncoderDecoderPath(model: Models): String = when (model) {
-    Models.HuggingfaceTinyAr -> gcsHuggingfaceWhisperModelPath("openai", "tiny", "ar")
-    Models.HuggingfaceTinyEn -> gcsHuggingfaceWhisperModelPath("openai", "tiny", "en")
-    Models.HuggingfaceBaseAr -> gcsHuggingfaceWhisperModelPath("openai", "base", "ar")
-    Models.HuggingfaceBaseEn -> gcsHuggingfaceWhisperModelPath("openai", "base", "en")
-    Models.Sergenes -> gcsSergenesWhisperModelPath()
-    Models.SergenesEn -> gcsSergenesWhisperModelPath("en")
+fun gcsEncoderDecoderPath(model: AsrModels): String = when (model) {
+    AsrModels.HuggingfaceTinyAr -> gcsHuggingfaceWhisperModelPath("openai", "tiny", "ar")
+    AsrModels.HuggingfaceTinyEn -> gcsHuggingfaceWhisperModelPath("openai", "tiny", "en")
+    AsrModels.HuggingfaceBaseAr -> gcsHuggingfaceWhisperModelPath("openai", "base", "ar")
+    AsrModels.HuggingfaceBaseEn -> gcsHuggingfaceWhisperModelPath("openai", "base", "en")
+    AsrModels.Sergenes -> gcsSergenesWhisperModelPath()
+    AsrModels.SergenesEn -> gcsSergenesWhisperModelPath("en")
+    AsrModels.AndroidFreeForm -> ""
 }
