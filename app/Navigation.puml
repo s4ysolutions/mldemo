@@ -1,0 +1,34 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+set separator none
+
+package com.app {
+    class MainActivity {
+    - navController: NavHostController
+    - content: @Composable
+    }
+}
+
+package androidx.navigation {
+    class NavHostController {
+    + navigate(route: String)
+    }
+
+    class NavHost <@Composable>{
+    - navController: NavHostController
+    ==
+    + composable1: @Composable
+    + composable2: @Composable
+    ...
+    + composableN: @Composable
+    }
+}
+
+MainActivity::navController ..> NavHostController::navigate#Gray : change route
+MainActivity::content .right.> NavHost#Gray:renders
+
+NavHost .up.> NavHostController#Gray : get current route
+
+
+@enduml

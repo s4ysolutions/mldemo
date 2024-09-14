@@ -74,9 +74,10 @@ dependencies {
     kapt(libs.dagger.hilt.android.compiler)
 
     // implementation(project(":app:ui:interaction"))
-    implementation(project(":guesser"))
+    implementation(project(":agora"))
     implementation(project(":audio-classification"))
     implementation(project(":asr"))
+    implementation(project(":guesser"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.speech.RecognizerIntent
 import android.speech.RecognizerIntent.EXTRA_ENABLE_LANGUAGE_DETECTION
 import android.speech.RecognizerIntent.EXTRA_PARTIAL_RESULTS
@@ -17,10 +18,11 @@ import kotlinx.coroutines.flow.callbackFlow
 import solutions.s4y.mldemo.voice_detection.yamnet.IVoiceClassifier
 import java.util.concurrent.atomic.AtomicBoolean
 
+
 private const val TAG = "AndroidSpeechRecognizer"
 
 @SuppressLint("InlinedApi")
-private val speechRecognizerIntent =
+private fun speechRecognizerIntent(audioPipeOutput: ParcelFileDescriptor): Intent =
     Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
         putExtra(
             RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -31,6 +33,8 @@ private val speechRecognizerIntent =
         putExtra(EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000)
         putExtra(EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 5000)
         putExtra(EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1000)
+        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE, audioPipeOutput);
+
         //putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now")
         /*
         putExtra(
@@ -40,17 +44,22 @@ private val speechRecognizerIntent =
          */
     }
 
-fun Flow<IVoiceClassifier.Classes>.androidSpeechRecognitions(
+fun Flow<IVoiceClassifier.Classes>.androidRealTimeSpeechRecognitions(
     context: Context,
-    onVoiceDetected:() -> Unit,
+    onVoiceDetected: () -> Unit,
     onRecognizerStop: () -> Unit
 ): Flow<String> = callbackFlow {
+    // TODO: close FDs and pipes
+    val audioPipe: Array<ParcelFileDescriptor> = ParcelFileDescriptor.createPipe();
     val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
+    var mOutputStream: ParcelFileDescriptor.AutoCloseOutputStream =
+        ParcelFileDescriptor.AutoCloseOutputStream(audioPipe[1])
+
     val isListening = AtomicBoolean(false)
     speechRecognizer.setRecognitionListener(object :
         android.speech.RecognitionListener {
         override fun onReadyForSpeech(params: Bundle?) {
-            Log.d(TAG,"android.speech: onReadyForSpeech")
+            Log.d(TAG, "android.speech: onReadyForSpeech")
         }
 
         override fun onBeginningOfSpeech() {
@@ -88,7 +97,10 @@ fun Flow<IVoiceClassifier.Classes>.androidSpeechRecognitions(
         }
 
         override fun onLanguageDetection(results: Bundle) {
-            Log.d(TAG,"android.speech: onLanguageDetection ${results.getString("detected_language")}")
+            Log.d(
+                TAG,
+                "android.speech: onLanguageDetection ${results.getString("detected_language")}"
+            )
         }
 
         override fun onSegmentResults(segmentResults: Bundle) {
@@ -101,11 +113,11 @@ fun Flow<IVoiceClassifier.Classes>.androidSpeechRecognitions(
         }
 
         override fun onEndOfSegmentedSession() {
-            Log.d(TAG,"android.speech: onEndOfSegmentedSession")
+            Log.d(TAG, "android.speech: onEndOfSegmentedSession")
         }
 
         override fun onResults(results: Bundle?) {
-            Log.d(TAG,"android.speech: onResults")
+            Log.d(TAG, "android.speech: onResults")
             val result =
                 results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                     ?.firstOrNull()
@@ -125,7 +137,7 @@ fun Flow<IVoiceClassifier.Classes>.androidSpeechRecognitions(
                 partialResults?.getStringArrayList("android.speech.extra.UNSTABLE_TEXT")
                     ?.joinToString()
             Log.d(TAG, "android.speech: onPartialResults currentLocale=$currentLocale")
-            Log.d(TAG,"android.speech: onPartialResults resultsRecognition=$resultsRecognition")
+            Log.d(TAG, "android.speech: onPartialResults resultsRecognition=$resultsRecognition")
             Log.d(TAG, "android.speech: onPartialResults unstableText=$unstableText")
 
             val result = (resultsRecognition + unstableText).trim()
@@ -140,7 +152,7 @@ fun Flow<IVoiceClassifier.Classes>.androidSpeechRecognitions(
     })
     var nonSpeechCount = 0
     try {
-        this@androidSpeechRecognitions.collect {
+        this@androidRealTimeSpeechRecognitions.collect {
             if (it.isSpeech) {
                 Log.d(TAG, "voice detected")
                 onVoiceDetected()
@@ -148,7 +160,10 @@ fun Flow<IVoiceClassifier.Classes>.androidSpeechRecognitions(
                 // if there were more than 5 non-speech events,restart listening0
                 if (!wasListening || nonSpeechCount > 5) {
                     Log.d(TAG, " speechRecognizer.startListening")
-                    speechRecognizer.startListening(speechRecognizerIntent)
+                    speechRecognizer.startListening(speechRecognizerIntent(audioPipe[0]))
+                }
+                it.waveForms.forEach { waveForm ->
+                //    mOutputStream.write(waveForm)
                 }
                 nonSpeechCount = 0
             } else {

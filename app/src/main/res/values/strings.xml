@@ -3,4 +3,5 @@
     <string name="guesser">Guesser</string>
     <string name="asr">ASR</string>
     <string name="audio_classification">Audio classification</string>
+    <string name="agora">Agora</string>
 </resources>

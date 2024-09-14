@@ -15,18 +15,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import solutions.s4y.agora.ui.AgoraBottomBar
+import solutions.s4y.agora.ui.AgoraScreen
 import solutions.s4y.mldemo.asr.ui.ASRBottomBar
+import solutions.s4y.mldemo.asr.ui.VoiceTranscriptionScreen
+import solutions.s4y.mldemo.guesser.GuesserScreen
 import solutions.s4y.mldemo.theme.MLDemoTheme
 import solutions.s4y.mldemo.ui.composable.MainDrawer
 import solutions.s4y.mldemo.ui.composable.MainTopAppBar
 import solutions.s4y.mldemo.ui.composable.navigation.Destinations
-import solutions.s4y.mldemo.ui.composable.navigation.MainNavHost
-import solutions.s4y.mldemo.ui.composable.navigation.MainNavRouter
 import solutions.s4y.mldemo.voice_detection.ui.VoiceDetectionBottomBar
+import solutions.s4y.mldemo.voice_detection.ui.VoiceDetectionScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -41,19 +46,13 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val currentNavBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute =
-                    currentNavBackStackEntry?.destination?.route ?: Destinations.Guesser.route
-                val mainRouter = remember(navController) {
-                    MainNavRouter(navController)
-                }
+                    currentNavBackStackEntry?.destination?.route ?: Destinations.defaultRoute.route
 
                 ModalNavigationDrawer(drawerContent = {
                     MainDrawer(
-                        route = currentRoute,
-                        navigateToGuesser = { mainRouter.navigateToGuesser() },
-                        navigateToVoiceDetection = { mainRouter.navigateToVoiceDetection() },
-                        navigateToVoiceTranscription = { mainRouter.navigateToVoiceTranscription() },
+                        navController = navController,
+                        modifier = Modifier,
                         closeDrawer = { coroutineScope.launch { drawerState.close() } },
-                        modifier = Modifier
                     )
                 }, drawerState = drawerState) {
                     Scaffold(
@@ -71,18 +70,35 @@ class MainActivity : ComponentActivity() {
                                     // GuesserBottomBar()
                                 }
 
-                                Destinations.VoiceDetection.route -> {
+                                Destinations.VoiceClassification.route -> {
                                     VoiceDetectionBottomBar()
                                 }
 
-                                Destinations.VoiceTranscription.route -> {
+                                Destinations.ASR.route -> {
                                     ASRBottomBar()
+                                }
+
+                                Destinations.Agora.route -> {
+                                    AgoraBottomBar()
                                 }
                             }
                         },
                     ) { innerPadding ->
                         Box(modifier = Modifier.padding(innerPadding)) {
-                            MainNavHost(navController = navController)
+                            NavHost(navController, startDestination = Destinations.defaultRoute.route) {
+                                composable(Destinations.VoiceClassification.route) {
+                                    VoiceDetectionScreen()
+                                }
+                                composable(Destinations.ASR.route) {
+                                    VoiceTranscriptionScreen()
+                                }
+                                composable(Destinations.Guesser.route) {
+                                    GuesserScreen()
+                                }
+                                composable(Destinations.Agora.route) {
+                                    AgoraScreen()
+                                }
+                            }
                         }
                     }
                 }

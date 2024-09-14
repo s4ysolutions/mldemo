@@ -17,23 +17,26 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import solutions.s4y.mldemo.R
 import solutions.s4y.mldemo.ui.composable.navigation.Destinations
 
 @Composable
 fun MainDrawer(
-    route: String,
+    navController: NavController,
     modifier: Modifier = Modifier,
-    navigateToGuesser: () -> Unit,
-    navigateToVoiceDetection: () -> Unit,
-    navigateToVoiceTranscription: () -> Unit,
     closeDrawer: () -> Unit
 ) {
+    val currentNavBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute =
+        currentNavBackStackEntry?.destination?.route ?: Destinations.defaultRoute.route
     ModalDrawerSheet(modifier = Modifier) {
         DrawerHeader(modifier)
         Spacer(modifier = Modifier.padding(5.dp))
@@ -44,9 +47,9 @@ fun MainDrawer(
                     style = MaterialTheme.typography.labelSmall
                 )
             },
-            selected = route == Destinations.Guesser.route,
+            selected = currentRoute == Destinations.Guesser.route,
             onClick = {
-                navigateToGuesser()
+                navController.navigate(Destinations.Guesser.route)
                 closeDrawer()
             },
             icon = { Icon(imageVector = Icons.Default.RepeatOne, contentDescription = null) },
@@ -54,10 +57,10 @@ fun MainDrawer(
         )
 
         NavigationDrawerItem(
-            label = { Text(text = stringResource(id = Destinations.VoiceDetection.title), style = MaterialTheme.typography.labelSmall) },
-            selected = route == Destinations.VoiceDetection.route,
+            label = { Text(text = stringResource(id = Destinations.VoiceClassification.title), style = MaterialTheme.typography.labelSmall) },
+            selected = currentRoute == Destinations.VoiceClassification.route,
             onClick = {
-                navigateToVoiceDetection()
+                navController.navigate(Destinations.VoiceClassification.route)
                 closeDrawer()
             },
             icon = { Icon(imageVector = Icons.Default.Mic, contentDescription = null) },
@@ -65,10 +68,21 @@ fun MainDrawer(
         )
 
         NavigationDrawerItem(
-            label = { Text(text = stringResource(id = Destinations.VoiceTranscription.title), style = MaterialTheme.typography.labelSmall) },
-            selected = route == Destinations.VoiceTranscription.route,
+            label = { Text(text = stringResource(id = Destinations.ASR.title), style = MaterialTheme.typography.labelSmall) },
+            selected = currentRoute == Destinations.ASR.route,
             onClick = {
-                navigateToVoiceTranscription()
+                navController.navigate(Destinations.ASR.route)
+                closeDrawer()
+            },
+            icon = { Icon(imageVector = Icons.Default.Mic, contentDescription = null) },
+            shape = MaterialTheme.shapes.small
+        )
+
+        NavigationDrawerItem(
+            label = { Text(text = stringResource(id = Destinations.Agora.title), style = MaterialTheme.typography.labelSmall) },
+            selected = currentRoute == Destinations.Agora.route,
+            onClick = {
+                navController.navigate(Destinations.Agora.route)
                 closeDrawer()
             },
             icon = { Icon(imageVector = Icons.Default.Mic, contentDescription = null) },
